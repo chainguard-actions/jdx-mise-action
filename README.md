@@ -1,6 +1,12 @@
 # jdx/mise-action
 
-Hardened GitHub Action by [Chainguard](https://www.chainguard.dev).
+Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/jdx/mise-action](https://github.com/jdx/mise-action).
+
+## Versions
+
+| Version | Tag | Upstream commit |
+|---------|-----|-----------------|
+| v4.0.1 | [`v4.0.1`](https://github.com/chainguard-actions/mise-action/tree/v4.0.1) | — |
 
 ## Privacy
 
