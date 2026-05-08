@@ -1,5 +1,6 @@
 {
   "owner": "jdx",
   "name": "mise-action",
-  "visibility": "internal"
+  "visibility": "internal",
+  "block_publish": false
 }
