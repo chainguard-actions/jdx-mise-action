@@ -1,0 +1,25 @@
+name: Test mise_dir and working_directory inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory
+        run: mkdir -p /tmp/mise-work
+      - id: action
+        uses: .
+        with:
+          mise_dir: "/tmp/mise-custom-dir"
+          working_directory: "/tmp/mise-work"
+          cache: "false"
+          install: "false"
+      - name: Assert mise is available
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found in PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available"
+          mise --version
