@@ -13,12 +13,10 @@ jobs:
             [tools]
             node = "20"
           cache: "false"
-          install: "true"
-      - name: Assert node is available via mise
+          log_level: "info"
+      - name: Assert node is available
         run: |
-          if ! command -v node &>/dev/null; then
-            echo "FAIL: node not found in PATH"
-            exit 1
-          fi
-          echo "PASS: node is available"
-          node --version
+          which node || (echo "FAIL: node not found in PATH" && exit 1)
+          NODE_VERSION=$(node --version 2>&1)
+          echo "node version: $NODE_VERSION"
+          echo "PASS: node is available via mise_toml"

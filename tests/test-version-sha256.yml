@@ -9,15 +9,13 @@ jobs:
       - id: action
         uses: .
         with:
-          version: "2025.1.5"
+          version: "2025.5.16"
           sha256: ""
           cache: "false"
           install: "false"
       - name: Assert mise is available
         run: |
-          if ! command -v mise &>/dev/null; then
-            echo "FAIL: mise not found in PATH"
-            exit 1
-          fi
+          which mise || (echo "FAIL: mise not found in PATH" && exit 1)
+          MISE_VERSION=$(mise --version 2>&1 | head -1)
+          echo "mise version: $MISE_VERSION"
           echo "PASS: mise is available"
-          mise --version
