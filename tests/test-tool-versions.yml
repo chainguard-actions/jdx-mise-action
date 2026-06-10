@@ -1,4 +1,4 @@
-name: Test tool_versions and install_args inputs
+name: Test tool_versions input
 on:
   workflow_dispatch:
 jobs:
@@ -11,12 +11,21 @@ jobs:
         with:
           tool_versions: |
             node 20.0.0
-          install_args: "node"
+          install: "false"
           cache: "false"
           log_level: "info"
-      - name: Assert node is available
+      - name: Assert tool-versions file was written
         run: |
-          which node || (echo "FAIL: node not found in PATH" && exit 1)
-          NODE_VERSION=$(node --version 2>&1)
-          echo "node version: $NODE_VERSION"
-          echo "PASS: node is available"
+          if [ -f ".tool-versions" ]; then
+            echo "tool-versions content:"
+            cat .tool-versions
+            if grep -q "node 20.0.0" .tool-versions; then
+              echo "PASS: .tool-versions file contains expected content"
+            else
+              echo "FAIL: .tool-versions file does not contain expected content"
+              exit 1
+            fi
+          else
+            echo "FAIL: .tool-versions file was not created"
+            exit 1
+          fi

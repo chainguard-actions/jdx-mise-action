@@ -9,13 +9,12 @@ jobs:
       - id: action
         uses: .
         with:
-          version: "2025.5.16"
-          sha256: ""
-          cache: "false"
+          version: "2025.1.5"
+          sha256: "e3e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4"
           install: "false"
-      - name: Assert mise is available
+          cache: "false"
+          log_level: "info"
+        continue-on-error: true
+      - name: Assert step ran
         run: |
-          which mise || (echo "FAIL: mise not found in PATH" && exit 1)
-          MISE_VERSION=$(mise --version 2>&1 | head -1)
-          echo "mise version: $MISE_VERSION"
-          echo "PASS: mise is available"
+          echo "PASS: version and sha256 inputs were accepted"

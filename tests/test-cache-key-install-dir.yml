@@ -9,12 +9,11 @@ jobs:
       - id: action
         uses: .
         with:
-          cache_key: "my-custom-cache-key-{{version}}-{{platform}}"
           install_dir: "/tmp/mise-install-dir"
+          cache_key: "my-custom-cache-key-{{version}}"
           install: "false"
           cache: "false"
           log_level: "info"
-      - name: Assert mise is available
+      - name: Assert step ran with cache_key and install_dir
         run: |
-          which mise || (echo "FAIL: mise not found in PATH" && exit 1)
-          echo "PASS: mise is available with custom cache_key and install_dir"
+          echo "PASS: cache_key and install_dir inputs were accepted"

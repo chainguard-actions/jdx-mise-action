@@ -12,7 +12,6 @@ jobs:
           install: "true"
           cache: "false"
           log_level: "info"
-          env: "true"
       - name: Assert mise is available
         run: |
           which mise || (echo "FAIL: mise not found in PATH" && exit 1)

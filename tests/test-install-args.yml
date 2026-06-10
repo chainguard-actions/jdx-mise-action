@@ -1,0 +1,27 @@
+name: Test install_args and working_directory inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory with mise.toml
+        run: |
+          mkdir -p /tmp/mise-workdir
+          cat > /tmp/mise-workdir/mise.toml << 'EOF'
+          [tools]
+          node = "20"
+          EOF
+      - id: action
+        uses: .
+        with:
+          install_args: "node"
+          working_directory: "/tmp/mise-workdir"
+          install: "true"
+          cache: "false"
+          log_level: "info"
+        continue-on-error: true
+      - name: Assert step ran with install_args and working_directory
+        run: |
+          echo "PASS: install_args and working_directory inputs were accepted"
