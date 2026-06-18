@@ -1,0 +1,34 @@
+name: Test mise with specific version and sha256
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: "2025.1.5"
+          sha256: ""
+          install: "false"
+          cache: "false"
+      - name: Assert mise binary is available at expected version
+        run: |
+          echo "Checking mise is in PATH..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found in PATH"
+            exit 1
+          fi
+          MISE_VERSION=$(mise --version)
+          echo "mise version: $MISE_VERSION"
+          echo "PASS: mise binary is available"
+      - name: Assert mise version matches requested version
+        run: |
+          MISE_VERSION=$(mise --version)
+          echo "actual version: $MISE_VERSION"
+          if [[ "$MISE_VERSION" != *"2025.1.5"* ]]; then
+            echo "FAIL: expected version 2025.1.5 but got $MISE_VERSION"
+            exit 1
+          fi
+          echo "PASS: mise version matches requested version"
