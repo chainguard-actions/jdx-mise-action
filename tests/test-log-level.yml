@@ -1,0 +1,39 @@
+name: Test mise with custom log level
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          log_level: "debug"
+          fetch_from_github: "false"
+      - name: Assert mise is on PATH
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise is on PATH"
+      - name: Assert MISE_LOG_LEVEL env var is set
+        run: |
+          echo "MISE_LOG_LEVEL: $MISE_LOG_LEVEL"
+          if [ "$MISE_LOG_LEVEL" != "debug" ]; then
+            echo "FAIL: MISE_LOG_LEVEL should be 'debug' but got: $MISE_LOG_LEVEL"
+            exit 1
+          fi
+          echo "PASS: MISE_LOG_LEVEL is set to debug"
+      - name: Assert mise version works with debug log level
+        run: |
+          VERSION=$(mise --version)
+          echo "mise version: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: mise --version returned empty"
+            exit 1
+          fi
+          echo "PASS: mise is functional with debug log level"

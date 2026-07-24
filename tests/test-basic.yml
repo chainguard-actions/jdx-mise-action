@@ -1,0 +1,42 @@
+name: Test basic mise installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          fetch_from_github: "false"
+      - name: Assert mise is on PATH
+        run: |
+          echo "which mise: $(which mise)"
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise is on PATH"
+      - name: Assert mise version runs
+        run: |
+          VERSION_OUTPUT=$(mise --version)
+          echo "mise version: $VERSION_OUTPUT"
+          if [ -z "$VERSION_OUTPUT" ]; then
+            echo "FAIL: mise --version returned empty output"
+            exit 1
+          fi
+          echo "PASS: mise --version returned: $VERSION_OUTPUT"
+      - name: Assert cache-hit output is set
+        env:
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          # cache-hit should be false or true (a boolean string), not empty
+          if [ -z "$CACHE_HIT" ]; then
+            echo "FAIL: cache-hit output is empty"
+            exit 1
+          fi
+          echo "PASS: cache-hit output is set to: $CACHE_HIT"

@@ -1,0 +1,32 @@
+name: Test mise with shims not added to PATH
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          add_shims_to_path: "false"
+          fetch_from_github: "false"
+      - name: Assert mise binary is on PATH (mise bin dir is always added)
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise is on PATH"
+      - name: Assert mise shims directory is not in PATH
+        run: |
+          MISE_SHIMS_DIR="$HOME/.local/share/mise/shims"
+          echo "PATH: $PATH"
+          echo "Expected shims dir: $MISE_SHIMS_DIR"
+          if echo "$PATH" | tr ':' '\n' | grep -qF "$MISE_SHIMS_DIR"; then
+            echo "FAIL: mise shims directory should NOT be in PATH when add_shims_to_path=false"
+            exit 1
+          fi
+          echo "PASS: mise shims directory is not in PATH"
