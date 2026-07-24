@@ -11,6 +11,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v4.0.1 | [`v4.0.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.0.1) | — |
 | v4.1.0 | [`v4.1.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.1.0) | [`dba1968`](https://github.com/jdx/mise-action/commit/dba19683ed58901619b14f395a24841710cb4925) |
 | v4.2.0 | [`v4.2.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.0) | [`e6a8b39`](https://github.com/jdx/mise-action/commit/e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d) |
+| v4.2.2 | [`v4.2.2`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.2) | [`f10502f`](https://github.com/jdx/mise-action/commit/f10502fc09dadecfefb962fff68ce77213930204) |
 
 ## Privacy
 
