@@ -1,0 +1,40 @@
+name: Test mise with experimental flag
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          env: "false"
+          experimental: "true"
+          log_level: "debug"
+      - name: Assert mise is available in PATH
+        run: |
+          echo "which mise: $(which mise)"
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found in PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available"
+      - name: Assert MISE_EXPERIMENTAL env var is set
+        run: |
+          echo "MISE_EXPERIMENTAL: $MISE_EXPERIMENTAL"
+          if [ "$MISE_EXPERIMENTAL" != "1" ]; then
+            echo "FAIL: expected MISE_EXPERIMENTAL=1, got: $MISE_EXPERIMENTAL"
+            exit 1
+          fi
+          echo "PASS: MISE_EXPERIMENTAL is set to 1"
+      - name: Assert MISE_LOG_LEVEL env var is set
+        run: |
+          echo "MISE_LOG_LEVEL: $MISE_LOG_LEVEL"
+          if [ "$MISE_LOG_LEVEL" != "debug" ]; then
+            echo "FAIL: expected MISE_LOG_LEVEL=debug, got: $MISE_LOG_LEVEL"
+            exit 1
+          fi
+          echo "PASS: MISE_LOG_LEVEL is set to debug"

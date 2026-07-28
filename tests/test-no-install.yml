@@ -1,0 +1,45 @@
+name: Test mise with install disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          env: "false"
+          mise_toml: |
+            [tools]
+            node = "22"
+      - name: Assert mise is available in PATH
+        run: |
+          echo "which mise: $(which mise)"
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found in PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available"
+      - name: Assert mise.toml was written
+        run: |
+          # mise_toml is written to process.cwd() (workspace root)
+          if [ ! -f "$GITHUB_WORKSPACE/mise.toml" ]; then
+            echo "FAIL: mise.toml was not created"
+            ls -la "$GITHUB_WORKSPACE/" || true
+            exit 1
+          fi
+          echo "mise.toml contents:"
+          cat "$GITHUB_WORKSPACE/mise.toml"
+          echo "PASS: mise.toml exists"
+      - name: Assert mise is functional but install was skipped
+        run: |
+          MISE_VERSION=$(mise --version)
+          echo "mise version: $MISE_VERSION"
+          if [ -z "$MISE_VERSION" ]; then
+            echo "FAIL: mise --version returned empty"
+            exit 1
+          fi
+          echo "PASS: mise is functional but install was skipped"

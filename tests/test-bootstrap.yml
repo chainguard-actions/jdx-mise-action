@@ -1,0 +1,28 @@
+name: Test bootstrap_args and bootstrap_skip inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create minimal mise.toml for bootstrap
+        run: |
+          cat > "$GITHUB_WORKSPACE/mise.toml" << 'EOF'
+          [tools]
+          EOF
+      - id: action
+        uses: .
+        with:
+          bootstrap: "true"
+          bootstrap_skip: "tools"
+          bootstrap_args: ""
+          cache: "false"
+      - name: Assert mise is available
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found in PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available"

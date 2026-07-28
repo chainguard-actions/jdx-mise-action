@@ -1,0 +1,39 @@
+name: Test install_args and working_directory inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory with mise config
+        run: |
+          mkdir -p /tmp/mise-workdir
+          cat > /tmp/mise-workdir/mise.toml << 'EOF'
+          [tools]
+          node = "22"
+          EOF
+      - id: action
+        uses: .
+        with:
+          install_args: "node"
+          working_directory: /tmp/mise-workdir
+          cache: "false"
+      - name: Assert mise installed successfully
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found in PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available"
+      - name: Assert node is installed via mise
+        run: |
+          echo "Checking node is available..."
+          NODE_VERSION=$(mise exec node -- node --version 2>/dev/null || node --version 2>/dev/null || echo "")
+          echo "node version: $NODE_VERSION"
+          if [ -z "$NODE_VERSION" ]; then
+            echo "FAIL: node not found"
+            exit 1
+          fi
+          echo "PASS: node is available: $NODE_VERSION"

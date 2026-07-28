@@ -1,0 +1,44 @@
+name: Test mise with tool_versions input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          tool_versions: |
+            node 22
+          install: "false"
+          cache: "false"
+          env: "false"
+      - name: Assert .tool-versions was written
+        run: |
+          # tool_versions is written to process.cwd() (workspace root)
+          if [ ! -f "$GITHUB_WORKSPACE/.tool-versions" ]; then
+            echo "FAIL: .tool-versions was not created"
+            ls -la "$GITHUB_WORKSPACE/" || true
+            exit 1
+          fi
+          echo ".tool-versions contents:"
+          cat "$GITHUB_WORKSPACE/.tool-versions"
+          echo "PASS: .tool-versions exists"
+      - name: Assert .tool-versions contains expected content
+        run: |
+          if ! grep -q 'node' "$GITHUB_WORKSPACE/.tool-versions"; then
+            echo "FAIL: .tool-versions does not contain 'node'"
+            cat "$GITHUB_WORKSPACE/.tool-versions"
+            exit 1
+          fi
+          echo "PASS: .tool-versions contains expected content"
+      - name: Assert mise is available
+        run: |
+          VERSION=$(mise --version)
+          echo "mise version: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: mise --version returned empty"
+            exit 1
+          fi
+          echo "PASS: mise is available"

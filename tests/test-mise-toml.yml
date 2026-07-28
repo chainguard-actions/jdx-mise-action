@@ -1,0 +1,45 @@
+name: Test mise with mise.toml input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          mise_toml: |
+            [tools]
+            node = "22"
+          install: "false"
+          cache: "false"
+          env: "false"
+      - name: Assert mise.toml was written
+        run: |
+          # mise_toml is written to process.cwd() (workspace root)
+          if [ ! -f "$GITHUB_WORKSPACE/mise.toml" ]; then
+            echo "FAIL: mise.toml was not created"
+            ls -la "$GITHUB_WORKSPACE/" || true
+            exit 1
+          fi
+          echo "mise.toml contents:"
+          cat "$GITHUB_WORKSPACE/mise.toml"
+          echo "PASS: mise.toml exists"
+      - name: Assert mise.toml contains expected content
+        run: |
+          if ! grep -q 'node' "$GITHUB_WORKSPACE/mise.toml"; then
+            echo "FAIL: mise.toml does not contain 'node'"
+            cat "$GITHUB_WORKSPACE/mise.toml"
+            exit 1
+          fi
+          echo "PASS: mise.toml contains expected content"
+      - name: Assert mise is available
+        run: |
+          VERSION=$(mise --version)
+          echo "mise version: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: mise --version returned empty"
+            exit 1
+          fi
+          echo "PASS: mise is available"

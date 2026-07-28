@@ -1,0 +1,44 @@
+name: Test sha256 and install_dir inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Compute sha256 of mise binary for a specific version
+        id: fetch-sha256
+        run: |
+          MISE_VERSION="v2025.1.5"
+          # Determine the platform target (linux-x64 for ubuntu-latest)
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then
+            TARGET="linux-x64"
+          elif [ "$ARCH" = "aarch64" ]; then
+            TARGET="linux-arm64"
+          else
+            TARGET="linux-x64"
+          fi
+          URL="https://github.com/jdx/mise/releases/download/${MISE_VERSION}/mise-${MISE_VERSION}-${TARGET}"
+          echo "Fetching mise binary from $URL"
+          curl -sfL "$URL" -o /tmp/mise-binary
+          SHA256=$(sha256sum /tmp/mise-binary | awk '{print $1}')
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "version=$MISE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Computed sha256: $SHA256"
+      - id: action
+        uses: .
+        with:
+          version: ${{ steps.fetch-sha256.outputs.version }}
+          sha256: ${{ steps.fetch-sha256.outputs.sha256 }}
+          install_dir: /tmp/deprecated-install-dir
+          install: "false"
+          cache: "false"
+      - name: Assert mise is available
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found in PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available"
