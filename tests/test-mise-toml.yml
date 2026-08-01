@@ -1,0 +1,37 @@
+name: Test mise with mise_toml input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          mise_toml: |
+            [tools]
+            node = "22.0.0"
+          install: "true"
+          cache: "false"
+      - name: Assert mise.toml file was written
+        run: |
+          echo "Contents of mise.toml:"
+          cat mise.toml || echo "(file not found)"
+          if [ ! -f "mise.toml" ]; then
+            echo "FAIL: mise.toml file was not created"
+            exit 1
+          fi
+          if ! grep -q "node" mise.toml; then
+            echo "FAIL: mise.toml does not contain 'node'"
+            exit 1
+          fi
+          echo "PASS: mise.toml file created with correct content"
+      - name: Assert node is available via mise
+        run: |
+          echo "node version: $(node --version 2>&1 || echo 'not found')"
+          if ! command -v node &>/dev/null; then
+            echo "FAIL: node not found on PATH after mise install with mise.toml"
+            exit 1
+          fi
+          echo "PASS: node is available via mise.toml"
