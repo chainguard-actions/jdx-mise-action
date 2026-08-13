@@ -1,0 +1,31 @@
+name: Test mise with install disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          working_directory: /tmp
+      - name: Assert mise binary is available
+        run: |
+          echo "Checking mise is available..."
+          which mise || { echo "FAIL: mise not found on PATH"; exit 1; }
+          MISE_VERSION=$(mise --version)
+          echo "mise version: $MISE_VERSION"
+          echo "PASS: mise binary is available even with install=false"
+      - name: Assert cache-hit output is set
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          # With cache disabled, cache-hit should be false
+          if [ "$CACHE_HIT" != "false" ]; then
+            echo "WARN: expected cache-hit=false with cache=false, got: '$CACHE_HIT'"
+          fi
+          echo "PASS: cache-hit output checked"

@@ -1,0 +1,26 @@
+name: Test mise with specific version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: "2025.1.5"
+          install: "false"
+          working_directory: /tmp
+      - name: Assert mise version matches requested
+        run: |
+          echo "Checking mise version..."
+          which mise || { echo "FAIL: mise not found on PATH"; exit 1; }
+          MISE_VERSION=$(mise --version)
+          echo "mise version output: $MISE_VERSION"
+          if echo "$MISE_VERSION" | grep -q "2025.1.5"; then
+            echo "PASS: mise version 2025.1.5 installed"
+          else
+            echo "FAIL: expected mise 2025.1.5, got: $MISE_VERSION"
+            exit 1
+          fi

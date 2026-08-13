@@ -1,0 +1,29 @@
+name: Test basic mise install
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+          working_directory: /tmp
+      - name: Assert mise is on PATH
+        run: |
+          echo "Checking mise is available..."
+          which mise || { echo "FAIL: mise not found on PATH"; exit 1; }
+          mise --version
+          echo "PASS: mise is available"
+      - name: Assert cache-hit output exists
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          if [ "$CACHE_HIT" != "true" ] && [ "$CACHE_HIT" != "false" ]; then
+            echo "FAIL: cache-hit output should be 'true' or 'false', got: '$CACHE_HIT'"
+            exit 1
+          fi
+          echo "PASS: cache-hit output is valid: $CACHE_HIT"

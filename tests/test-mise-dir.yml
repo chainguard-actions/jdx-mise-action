@@ -1,0 +1,22 @@
+name: Test mise_dir and install_dir inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          mise_dir: "/tmp/mise-custom-dir"
+          install_dir: "/tmp/mise-install-dir"
+          install: "false"
+          cache: "false"
+      - name: Assert mise is available
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise command not found"
+            exit 1
+          fi
+          echo "PASS: mise is available"

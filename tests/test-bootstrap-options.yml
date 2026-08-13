@@ -1,0 +1,23 @@
+name: Test bootstrap options
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          bootstrap: "true"
+          bootstrap_skip: "tools"
+          bootstrap_args: "--verbose"
+          install: "false"
+          cache: "false"
+      - name: Assert mise is available
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise command not found"
+            exit 1
+          fi
+          echo "PASS: mise is available"

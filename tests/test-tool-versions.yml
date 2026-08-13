@@ -1,0 +1,33 @@
+name: Test mise with tool_versions input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove existing mise config files to avoid conflicts
+        run: |
+          rm -f mise.lock mise.toml
+      - id: mise
+        uses: .
+        with:
+          tool_versions: |
+            node 20
+      - name: Assert mise is on PATH
+        run: |
+          echo "Checking mise is available..."
+          which mise || { echo "FAIL: mise not found on PATH"; exit 1; }
+          mise --version
+          echo "PASS: mise is available"
+      - name: Assert node was installed
+        run: |
+          echo "Checking node is available..."
+          which node || { echo "FAIL: node not found on PATH"; exit 1; }
+          NODE_VERSION=$(node --version)
+          echo "node version: $NODE_VERSION"
+          if [[ "$NODE_VERSION" != v20* ]]; then
+            echo "FAIL: expected node v20.x, got $NODE_VERSION"
+            exit 1
+          fi
+          echo "PASS: node $NODE_VERSION installed via tool_versions"
