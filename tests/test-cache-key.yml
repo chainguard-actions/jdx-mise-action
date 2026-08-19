@@ -1,0 +1,37 @@
+name: Test cache_key input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove existing mise config to avoid conflicts
+        run: |
+          rm -f mise.toml .tool-versions
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "true"
+          cache_key: "mise-custom-key-test-{{version}}"
+      - name: Assert mise is on PATH
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise is available with custom cache_key"
+      - name: Assert cache-hit output is set
+        env:
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          # cache-hit should be a boolean string (true or false)
+          if [ "$CACHE_HIT" != "true" ] && [ "$CACHE_HIT" != "false" ] && [ -n "$CACHE_HIT" ]; then
+            echo "FAIL: unexpected cache-hit value: $CACHE_HIT"
+            exit 1
+          fi
+          echo "PASS: cache-hit output is '$CACHE_HIT'"

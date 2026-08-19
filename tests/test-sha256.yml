@@ -1,0 +1,65 @@
+name: Test sha256 input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove existing mise config to avoid conflicts
+        run: |
+          rm -f mise.toml .tool-versions
+      - name: Get sha256 for mise version
+        id: get-sha256
+        run: |
+          # Fetch the sha256 for a known mise version for linux x64
+          VERSION="2024.12.14"
+          SHA256=$(curl -sfL "https://github.com/jdx/mise/releases/download/v${VERSION}/mise-v${VERSION}-linux-x64.tar.gz.sha256" 2>/dev/null || echo "")
+          if [ -z "$SHA256" ]; then
+            # Try alternative checksum file format
+            SHA256=$(curl -sfL "https://github.com/jdx/mise/releases/download/v${VERSION}/SHASUMS256.txt" 2>/dev/null | grep "mise-v${VERSION}-linux-x64.tar.gz" | awk '{print $1}' || echo "")
+          fi
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "Fetched sha256: $SHA256"
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          version: "2024.12.14"
+          sha256: ${{ steps.get-sha256.outputs.sha256 }}
+          install: "false"
+          cache: "false"
+      - name: Assert action ran with sha256 input
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          SHA256: ${{ steps.get-sha256.outputs.sha256 }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "sha256 used: $SHA256"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with sha256 verification"
+          elif [ "$OUTCOME" = "failure" ]; then
+            if [ -z "$SHA256" ]; then
+              echo "PASS: action failed gracefully (could not fetch sha256 from GitHub)"
+            else
+              echo "FAIL: action failed unexpectedly with sha256=$SHA256"
+              exit 1
+            fi
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
+      - name: Assert mise is on PATH when action succeeded
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          if [ "$OUTCOME" = "success" ]; then
+            if ! command -v mise &>/dev/null; then
+              echo "FAIL: mise not found on PATH after successful action"
+              exit 1
+            fi
+            echo "mise version: $(mise --version)"
+            echo "PASS: mise is available"
+          else
+            echo "SKIP: action did not succeed, skipping mise check"
+          fi

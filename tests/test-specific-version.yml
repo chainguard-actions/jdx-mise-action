@@ -1,0 +1,37 @@
+name: Test specific mise version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove existing mise config to avoid conflicts
+        run: |
+          # Remove symlinks/files that could cause mise to try to install tools
+          rm -f mise.toml .tool-versions
+      - id: action
+        uses: .
+        with:
+          version: "2024.12.14"
+          install: "false"
+          cache: "false"
+      - name: Assert mise is on PATH
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          MISE_VERSION=$(mise --version)
+          echo "mise version: $MISE_VERSION"
+          echo "PASS: mise is available"
+      - name: Assert correct mise version is installed
+        run: |
+          MISE_VERSION=$(mise --version)
+          echo "installed mise version: $MISE_VERSION"
+          if [[ "$MISE_VERSION" != *"2024.12.14"* ]]; then
+            echo "FAIL: expected mise version 2024.12.14, got $MISE_VERSION"
+            exit 1
+          fi
+          echo "PASS: correct mise version installed"

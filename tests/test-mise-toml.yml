@@ -1,0 +1,43 @@
+name: Test mise_toml input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove existing mise config to avoid conflicts
+        run: |
+          # Remove symlinks/files that could cause mise to try to install tools
+          # The action will write its own mise.toml from the mise_toml input
+          rm -f mise.toml .tool-versions
+      - id: action
+        uses: .
+        with:
+          mise_toml: |
+            [tools]
+            node = "20"
+          cache: "false"
+      - name: Assert mise is on PATH
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise is available"
+      - name: Assert node was installed via mise.toml
+        run: |
+          echo "Checking node is available..."
+          if ! command -v node &>/dev/null; then
+            echo "FAIL: node not found on PATH after mise install via mise.toml"
+            exit 1
+          fi
+          NODE_VERSION=$(node --version)
+          echo "node version: $NODE_VERSION"
+          if [[ "$NODE_VERSION" != v20* ]]; then
+            echo "FAIL: expected node v20.x, got $NODE_VERSION"
+            exit 1
+          fi
+          echo "PASS: node $NODE_VERSION installed via mise.toml"

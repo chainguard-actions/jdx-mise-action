@@ -1,0 +1,159 @@
+name: "build-test"
+on: # rebuild any PRs and main branch changes
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build: # make sure build/ci work properly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - run: |
+          npm install
+      - run: |
+          npm run all
+  test: # make sure the action works on a clean machine without building
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ubuntu
+            runs-on: ubuntu-latest
+          - name: macos
+            runs-on: macos-latest
+          - name: windows
+            runs-on: windows-latest
+          - name: alpine
+            runs-on: ubuntu-latest
+            container: alpine:latest
+            requirements: apk add --no-cache curl bash
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runs-on }}
+    container: ${{ matrix.container }}
+    steps:
+      - name: Install requirements
+        if: ${{ matrix.requirements }}
+        env:
+          REQUIREMENTS: ${{ matrix.requirements }}
+        run: |
+          args=()
+          while IFS= read -r -d '' t; do args+=("$t"); done \
+            < <(printf '%s' "$REQUIREMENTS" | xargs printf '%s\0')
+          "${args[@]}"
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Setup mise
+        uses: ./
+        with:
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+
+            [env]
+            MY_ENV_VAR = "abc"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: mise --version
+      - run: mise x jq -- jq --version
+      - run: which jq
+      - run: jq --version
+      - run: . scripts/test.sh
+        shell: bash
+
+  specific_version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Setup mise
+        uses: ./
+        with:
+          cache_save: ${{ github.ref_name == 'main' }}
+          cache_key_prefix: mise-v1
+          version: 2025.7.3
+          sha256: d38d4993c5379a680b50661f86287731dc1d1264777880a79b786403af337948
+          install_args: bun
+          mise_toml: |
+            [tools]
+            bun = "1"
+      - run: which bun
+      - run: bun -v
+      - name: Update mise
+        uses: ./
+        with:
+          cache_save: ${{ github.ref_name == 'main' }}
+          cache_key_prefix: mise-v1
+          version: v2025.7.3 # should trim the `v`
+          sha256: d38d4993c5379a680b50661f86287731dc1d1264777880a79b786403af337948
+
+  checksum_failure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Setup mise
+        id: bad
+        uses: ./
+        with:
+          version: 2024.9.6
+          sha256: 1f0b8c3d2e4f5a6b7c8d9e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t
+        continue-on-error: true
+      - name: Dump steps context
+        if: ${{ always() }}
+        env:
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+        run: echo "$STEPS_CONTEXT"
+      - name: expect failure
+        run: echo "Failed as expected"
+        if: ${{ steps.bad.outcome == 'failure' }}
+      - name: not failed as expected
+        env:
+          BAD_OUTCOME: ${{ steps.bad.outcome }}
+        run: |
+          echo "Expected failure but the job was $BAD_OUTCOME"
+          exit 1
+        if: ${{ steps.bad.outcome != 'failure' }}
+
+  custom_cache_key:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Setup mise with custom cache key
+        uses: ./
+        with:
+          cache_key: "custom-{{platform}}-{{install_args_hash}}-${{ github.run_id }}"
+          install_args: "jq@1.7.1"
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - run: mise --version
+      - run: mise x jq -- jq --version
+      - run: which jq
+      - run: jq --version
+
+  fetch_from_github:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Setup mise from mise.jdx.dev
+        uses: ./
+        with:
+          fetch_from_github: true
+          cache: false
+          cache_save: false
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - run: mise --version
+      - run: mise x jq -- jq --version
+      - run: which jq
+      - run: jq --version
