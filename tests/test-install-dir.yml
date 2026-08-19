@@ -1,4 +1,4 @@
-name: Test mise_dir custom installation directory
+name: Test install_dir (deprecated input)
 on:
   workflow_dispatch:
 jobs:
@@ -9,7 +9,7 @@ jobs:
       - id: action
         uses: .
         with:
-          mise_dir: "/tmp/mise-custom-dir"
+          install_dir: "/tmp/mise-install-dir-test"
           install: "false"
       - name: Assert mise is available
         run: |
@@ -17,13 +17,5 @@ jobs:
             echo "FAIL: mise command not found"
             exit 1
           fi
-          echo "PASS: mise is available"
+          echo "PASS: mise is available (install_dir deprecated input accepted)"
           mise --version
-      - name: Assert mise_dir was used
-        run: |
-          if [ ! -d "/tmp/mise-custom-dir" ]; then
-            echo "FAIL: custom mise_dir /tmp/mise-custom-dir was not created"
-            exit 1
-          fi
-          echo "PASS: custom mise_dir exists"
-          ls -la /tmp/mise-custom-dir

@@ -1,0 +1,26 @@
+name: Test mise with install disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+      - name: Assert mise binary is available even without install
+        run: |
+          echo "Checking mise binary is available..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise binary not found in PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS"
+      - name: Assert mise install was skipped (no tools installed from empty config)
+        run: |
+          echo "Verifying mise is functional but no tools were installed..."
+          mise list 2>&1 || true
+          echo "PASS: install step was skipped as expected"

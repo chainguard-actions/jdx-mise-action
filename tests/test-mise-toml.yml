@@ -1,4 +1,4 @@
-name: Test mise_toml input
+name: Test mise with mise_toml input
 on:
   workflow_dispatch:
 jobs:
@@ -9,24 +9,37 @@ jobs:
       - id: action
         uses: .
         with:
+          cache: "false"
+          env: "false"
           mise_toml: |
             [tools]
-            node = "20"
-          install: "false"
-          cache: "false"
-          log_level: "info"
-      - name: Assert mise.toml file was written
+            node = "22"
+      - name: Assert mise is on PATH
         run: |
-          if [ -f "mise.toml" ]; then
-            echo "mise.toml content:"
-            cat mise.toml
-            if grep -q "node" mise.toml; then
-              echo "PASS: mise.toml file contains expected content"
-            else
-              echo "FAIL: mise.toml file does not contain expected content"
-              exit 1
-            fi
-          else
-            echo "FAIL: mise.toml file was not created"
+          if ! which mise; then
+            echo "FAIL: mise not found on PATH"
             exit 1
           fi
+          echo "PASS: mise is on PATH"
+      - name: Assert mise.toml was written
+        run: |
+          if [ ! -f mise.toml ]; then
+            echo "FAIL: mise.toml was not created"
+            exit 1
+          fi
+          echo "mise.toml contents:"
+          cat mise.toml
+          if ! grep -q "node" mise.toml; then
+            echo "FAIL: mise.toml does not contain 'node'"
+            exit 1
+          fi
+          echo "PASS: mise.toml was created with correct content"
+      - name: Assert node is available via mise
+        run: |
+          NODE_VERSION=$(mise exec -- node --version 2>/dev/null || echo "")
+          echo "node version: $NODE_VERSION"
+          if [ -z "$NODE_VERSION" ]; then
+            echo "FAIL: node not available via mise"
+            exit 1
+          fi
+          echo "PASS: node is available: $NODE_VERSION"

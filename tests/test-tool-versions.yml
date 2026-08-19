@@ -1,4 +1,4 @@
-name: Test tool_versions input
+name: Test mise with tool_versions input
 on:
   workflow_dispatch:
 jobs:
@@ -6,26 +6,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove action mise.toml to avoid conflicts with tool_versions test
+        run: |
+          # The action's mise.toml defines dev tools (node 24, aube, etc.)
+          # Remove it so mise only sees the .tool-versions file written by the action
+          rm -f mise.toml mise.lock
       - id: action
         uses: .
         with:
-          tool_versions: |
-            node 20.0.0
-          install: "false"
           cache: "false"
-          log_level: "info"
-      - name: Assert tool-versions file was written
+          env: "false"
+          tool_versions: |
+            node 22
+      - name: Assert mise is on PATH
         run: |
-          if [ -f ".tool-versions" ]; then
-            echo "tool-versions content:"
-            cat .tool-versions
-            if grep -q "node 20.0.0" .tool-versions; then
-              echo "PASS: .tool-versions file contains expected content"
-            else
-              echo "FAIL: .tool-versions file does not contain expected content"
-              exit 1
-            fi
-          else
-            echo "FAIL: .tool-versions file was not created"
+          if ! which mise; then
+            echo "FAIL: mise not found on PATH"
             exit 1
           fi
+          echo "PASS: mise is on PATH"
+      - name: Assert .tool-versions was written
+        run: |
+          if [ ! -f .tool-versions ]; then
+            echo "FAIL: .tool-versions was not created"
+            exit 1
+          fi
+          echo ".tool-versions contents:"
+          cat .tool-versions
+          if ! grep -q "node" .tool-versions; then
+            echo "FAIL: .tool-versions does not contain 'node'"
+            exit 1
+          fi
+          echo "PASS: .tool-versions was created with correct content"
+      - name: Assert node is available via mise
+        run: |
+          NODE_VERSION=$(mise exec -- node --version 2>/dev/null || echo "")
+          echo "node version: $NODE_VERSION"
+          if [ -z "$NODE_VERSION" ]; then
+            echo "FAIL: node not available via mise"
+            exit 1
+          fi
+          echo "PASS: node is available: $NODE_VERSION"

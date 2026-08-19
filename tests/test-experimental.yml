@@ -1,4 +1,4 @@
-name: Test mise with install_args
+name: Test mise with experimental mode
 on:
   workflow_dispatch:
 jobs:
@@ -9,12 +9,10 @@ jobs:
       - id: action
         uses: .
         with:
+          install: "false"
           cache: "false"
+          experimental: "true"
           env: "false"
-          mise_toml: |
-            [tools]
-            node = "22"
-          install_args: "node"
       - name: Assert mise is on PATH
         run: |
           if ! which mise; then
@@ -22,12 +20,11 @@ jobs:
             exit 1
           fi
           echo "PASS: mise is on PATH"
-      - name: Assert node is installed (was in install_args)
+      - name: Assert MISE_EXPERIMENTAL env var is set
         run: |
-          NODE_VERSION=$(mise exec -- node --version 2>/dev/null || echo "")
-          echo "node version: $NODE_VERSION"
-          if [ -z "$NODE_VERSION" ]; then
-            echo "FAIL: node should be installed via install_args"
+          echo "MISE_EXPERIMENTAL: $MISE_EXPERIMENTAL"
+          if [ "$MISE_EXPERIMENTAL" != "1" ]; then
+            echo "FAIL: expected MISE_EXPERIMENTAL=1, got: $MISE_EXPERIMENTAL"
             exit 1
           fi
-          echo "PASS: node is installed: $NODE_VERSION"
+          echo "PASS: MISE_EXPERIMENTAL is set to 1"

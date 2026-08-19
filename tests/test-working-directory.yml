@@ -1,0 +1,36 @@
+name: Test mise with working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create a subdirectory for working_directory test
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/mysubdir"
+          echo "Created mysubdir"
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          env: "false"
+          working_directory: "${{ github.workspace }}/mysubdir"
+      - name: Assert mise is on PATH
+        run: |
+          if ! which mise; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise is on PATH"
+      - name: Assert mise works in the working directory
+        run: |
+          cd "$GITHUB_WORKSPACE/mysubdir"
+          VERSION=$(mise --version 2>/dev/null || echo "")
+          echo "mise version in working dir: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: mise not working in working directory"
+            exit 1
+          fi
+          echo "PASS: mise works in working directory: $VERSION"

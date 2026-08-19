@@ -1,0 +1,33 @@
+name: Test mise with custom cache key prefix
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "true"
+          cache_key_prefix: "my-custom-prefix-v1"
+          env: "false"
+      - name: Assert mise is on PATH
+        run: |
+          if ! which mise; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise is on PATH"
+      - name: Assert cache-hit output is set
+        env:
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          # cache-hit should be a boolean (true or false)
+          if [ "$CACHE_HIT" != "true" ] && [ "$CACHE_HIT" != "false" ]; then
+            echo "FAIL: expected cache-hit to be 'true' or 'false', got: $CACHE_HIT"
+            exit 1
+          fi
+          echo "PASS: cache-hit output is valid: $CACHE_HIT"

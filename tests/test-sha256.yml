@@ -1,0 +1,32 @@
+name: Test sha256 checksum verification
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Get mise version and sha256
+        id: get-sha256
+        run: |
+          VERSION="v2025.1.5"
+          ARCH="x86_64"
+          URL="https://github.com/jdx/mise/releases/download/${VERSION}/mise-${VERSION}-linux-${ARCH}.tar.gz"
+          SHA256=$(curl -sfL "${URL}.sha256" | awk '{print $1}')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "sha256=${SHA256}" >> "$GITHUB_OUTPUT"
+          echo "Fetched sha256: ${SHA256} for version ${VERSION}"
+      - id: action
+        uses: .
+        with:
+          version: ${{ steps.get-sha256.outputs.version }}
+          sha256: ${{ steps.get-sha256.outputs.sha256 }}
+          install: "false"
+      - name: Assert mise is available
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise command not found"
+            exit 1
+          fi
+          echo "PASS: mise is available with sha256 verification"
+          mise --version

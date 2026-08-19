@@ -1,4 +1,4 @@
-name: Test cache_key and install_dir inputs
+name: Test custom cache key
 on:
   workflow_dispatch:
 jobs:
@@ -9,21 +9,13 @@ jobs:
       - id: action
         uses: .
         with:
-          cache_key: "mise-v1-test-custom-key"
-          install_dir: ""
-          cache: "true"
+          cache_key: "mise-custom-key-v1"
           install: "false"
       - name: Assert mise is available
         run: |
           if ! command -v mise &>/dev/null; then
-            echo "FAIL: mise not found in PATH"
+            echo "FAIL: mise command not found"
             exit 1
           fi
           echo "PASS: mise is available"
           mise --version
-      - name: Assert cache-hit output exists
-        env:
-          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
-        run: |
-          echo "cache-hit: $CACHE_HIT"
-          echo "PASS: cache-hit output is '$CACHE_HIT'"

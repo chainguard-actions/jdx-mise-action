@@ -1,0 +1,53 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'releases/*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  test-typescript:
+    name: TypeScript Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      # `mise.toml` pins both Node and aube; mise-action installs
+      # whatever's listed there. Reads `package-lock.json`
+      # directly — no separate `aube-lock.yaml` to maintain.
+      # `.npmrc` pins `node-linker=hoisted` so the layout is
+      # npm-flat (rollup's `--configPlugin` resolution
+      # requires this).
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+        with:
+          cache: false
+
+      - name: Install Dependencies
+        id: aube-ci
+        run: aube ci
+
+      - name: Check Format
+        id: aube-format-check
+        run: aubr format:check
+
+      - name: Lint
+        id: aube-lint
+        run: aubr lint
+
+      # - name: Test
+      #   id: npm-ci-test
+      #   run: npm run ci-test

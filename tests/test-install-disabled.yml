@@ -1,4 +1,4 @@
-name: Test mise with install_args
+name: Test mise with install disabled
 on:
   workflow_dispatch:
 jobs:
@@ -9,12 +9,12 @@ jobs:
       - id: action
         uses: .
         with:
+          install: "false"
           cache: "false"
           env: "false"
           mise_toml: |
             [tools]
             node = "22"
-          install_args: "node"
       - name: Assert mise is on PATH
         run: |
           if ! which mise; then
@@ -22,12 +22,13 @@ jobs:
             exit 1
           fi
           echo "PASS: mise is on PATH"
-      - name: Assert node is installed (was in install_args)
+      - name: Assert node is NOT installed (install was skipped)
         run: |
-          NODE_VERSION=$(mise exec -- node --version 2>/dev/null || echo "")
-          echo "node version: $NODE_VERSION"
-          if [ -z "$NODE_VERSION" ]; then
-            echo "FAIL: node should be installed via install_args"
+          # When install=false, mise install is not run, so node should not be installed
+          NODE_PATH=$(mise which node 2>/dev/null || echo "")
+          echo "node path: $NODE_PATH"
+          if [ -n "$NODE_PATH" ]; then
+            echo "FAIL: node should not be installed when install=false, but found: $NODE_PATH"
             exit 1
           fi
-          echo "PASS: node is installed: $NODE_VERSION"
+          echo "PASS: node is not installed as expected when install=false"
