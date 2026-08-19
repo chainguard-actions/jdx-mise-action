@@ -6,20 +6,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - id: mise
+      - id: action
         uses: .
         with:
-          install_dir: "/tmp/mise-install-dir"
+          install_dir: "/tmp/deprecated-install-dir"
           install: "false"
           cache: "false"
-        continue-on-error: true
-      - name: Assert mise binary is available
+          env: "false"
+      - name: Assert mise is on PATH
         run: |
-          echo "Checking mise is in PATH..."
-          if ! command -v mise &>/dev/null; then
-            echo "FAIL: mise not found in PATH"
+          echo "mise path: $(which mise || echo 'not found')"
+          if ! which mise; then
+            echo "FAIL: mise not found on PATH"
             exit 1
           fi
-          MISE_VERSION=$(mise --version)
-          echo "mise version: $MISE_VERSION"
-          echo "PASS: mise binary is available (install_dir is deprecated but accepted)"
+          echo "PASS: mise is on PATH (install_dir input accepted)"
+      - name: Assert mise version runs
+        run: |
+          VERSION=$(mise --version)
+          echo "mise version: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: mise --version returned empty"
+            exit 1
+          fi
+          echo "PASS: mise functional with deprecated install_dir input"

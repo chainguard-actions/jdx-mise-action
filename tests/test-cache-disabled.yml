@@ -1,4 +1,4 @@
-name: Test mise with install disabled
+name: Test mise with cache disabled
 on:
   workflow_dispatch:
 jobs:
@@ -12,24 +12,26 @@ jobs:
           install: "false"
           cache: "false"
           env: "false"
-      - name: Assert mise is on PATH
+      - name: Assert cache-hit is false when cache disabled
+        env:
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          if [ "$CACHE_HIT" != "false" ]; then
+            echo "FAIL: expected cache-hit=false when cache is disabled, got: $CACHE_HIT"
+            exit 1
+          fi
+          echo "PASS: cache-hit=false as expected"
+      - name: Assert mise is still installed and functional
         run: |
           if ! which mise; then
             echo "FAIL: mise not found on PATH"
             exit 1
           fi
-          echo "PASS: mise is on PATH"
-      - name: Assert mise version runs
-        run: |
           VERSION=$(mise --version)
           echo "mise version: $VERSION"
           if [ -z "$VERSION" ]; then
             echo "FAIL: mise --version returned empty"
             exit 1
           fi
-          echo "PASS: mise version: $VERSION"
-      - name: Assert mise ls runs without error
-        run: |
-          OUTPUT=$(mise ls 2>&1 || true)
-          echo "mise ls output: $OUTPUT"
-          echo "PASS: mise ls ran without error"
+          echo "PASS: mise works without cache"

@@ -1,4 +1,4 @@
-name: Test basic mise installation
+name: Test mise installation with specific version
 on:
   workflow_dispatch:
 jobs:
@@ -9,27 +9,27 @@ jobs:
       - id: action
         uses: .
         with:
+          version: "2025.1.5"
           install: "false"
           cache: "false"
           env: "false"
       - name: Assert mise is on PATH
         run: |
-          echo "mise path: $(which mise)"
           if ! which mise; then
             echo "FAIL: mise not found on PATH"
             exit 1
           fi
           echo "PASS: mise is on PATH"
-      - name: Assert mise version runs
+      - name: Assert correct version installed
         run: |
-          VERSION=$(mise --version)
-          echo "mise version: $VERSION"
-          if [ -z "$VERSION" ]; then
-            echo "FAIL: mise --version returned empty"
+          INSTALLED=$(mise --version)
+          echo "installed version output: $INSTALLED"
+          if ! echo "$INSTALLED" | grep -q "2025.1.5"; then
+            echo "FAIL: expected version 2025.1.5 but got: $INSTALLED"
             exit 1
           fi
-          echo "PASS: mise version output: $VERSION"
-      - name: Assert cache-hit output is set
+          echo "PASS: correct version installed"
+      - name: Assert cache-hit is false when cache disabled
         env:
           CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
         run: |
@@ -38,4 +38,4 @@ jobs:
             echo "FAIL: expected cache-hit=false when cache is disabled, got: $CACHE_HIT"
             exit 1
           fi
-          echo "PASS: cache-hit=$CACHE_HIT"
+          echo "PASS: cache-hit=false as expected"

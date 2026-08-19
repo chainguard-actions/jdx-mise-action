@@ -6,30 +6,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - id: mise
+      - id: action
         uses: .
         with:
           tool_versions: |
-            node 20.0.0
-          install: "false"
+            usage latest
           cache: "false"
+          env: "false"
       - name: Assert .tool-versions file was written
         run: |
-          if [ ! -f .tool-versions ]; then
-            echo "FAIL: .tool-versions was not created"
+          if [ ! -f ".tool-versions" ]; then
+            echo "FAIL: .tool-versions file not found"
             exit 1
           fi
-          echo ".tool-versions contents:"
+          echo "PASS: .tool-versions file exists"
           cat .tool-versions
-          if ! grep -q "node 20.0.0" .tool-versions; then
-            echo "FAIL: .tool-versions does not contain 'node 20.0.0'"
-            exit 1
-          fi
-          echo "PASS: .tool-versions exists and contains expected content"
-      - name: Assert mise is available
+      - name: Assert .tool-versions content
         run: |
-          if ! command -v mise &>/dev/null; then
-            echo "FAIL: mise not found in PATH"
+          CONTENT=$(cat .tool-versions)
+          echo "content: $CONTENT"
+          if ! echo "$CONTENT" | grep -q "usage"; then
+            echo "FAIL: .tool-versions does not contain 'usage'"
             exit 1
           fi
-          echo "PASS: mise is available"
+          echo "PASS: .tool-versions contains expected content"
+      - name: Assert usage is installed via mise
+        run: |
+          USAGE_PATH=$(mise which usage 2>/dev/null || echo "")
+          echo "usage path: $USAGE_PATH"
+          if [ -z "$USAGE_PATH" ]; then
+            echo "FAIL: usage not installed via mise"
+            exit 1
+          fi
+          echo "PASS: usage installed at: $USAGE_PATH"

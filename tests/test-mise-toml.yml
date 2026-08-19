@@ -6,33 +6,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - id: mise
+      - id: action
         uses: .
         with:
           mise_toml: |
             [tools]
-            node = "20.0.0"
+            usage = "latest"
           cache: "false"
-      - name: Assert node is installed via mise.toml
+          env: "false"
+      - name: Assert mise.toml file was written
         run: |
-          echo "Checking node is available..."
-          if ! command -v node &>/dev/null; then
-            echo "FAIL: node not found in PATH"
+          if [ ! -f "mise.toml" ]; then
+            echo "FAIL: mise.toml file not found"
             exit 1
           fi
-          NODE_VERSION=$(node --version)
-          echo "node version: $NODE_VERSION"
-          if [[ "$NODE_VERSION" != v20* ]]; then
-            echo "FAIL: expected node v20.x, got $NODE_VERSION"
-            exit 1
-          fi
-          echo "PASS: node $NODE_VERSION is available"
-      - name: Assert mise.toml was written
-        run: |
-          if [ ! -f mise.toml ]; then
-            echo "FAIL: mise.toml was not created"
-            exit 1
-          fi
-          echo "mise.toml contents:"
+          echo "PASS: mise.toml file exists"
           cat mise.toml
-          echo "PASS: mise.toml exists"
+      - name: Assert mise.toml content
+        run: |
+          CONTENT=$(cat mise.toml)
+          echo "content: $CONTENT"
+          if ! echo "$CONTENT" | grep -q "usage"; then
+            echo "FAIL: mise.toml does not contain 'usage'"
+            exit 1
+          fi
+          echo "PASS: mise.toml contains expected content"
+      - name: Assert usage is installed via mise
+        run: |
+          USAGE_PATH=$(mise which usage 2>/dev/null || echo "")
+          echo "usage path: $USAGE_PATH"
+          if [ -z "$USAGE_PATH" ]; then
+            echo "FAIL: usage not installed via mise"
+            exit 1
+          fi
+          echo "PASS: usage installed at: $USAGE_PATH"

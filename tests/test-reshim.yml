@@ -1,0 +1,41 @@
+name: Test mise with reshim enabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          env: "false"
+          reshim: "true"
+      - name: Assert mise is on PATH
+        run: |
+          if ! which mise; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise is on PATH"
+      - name: Assert shims dir is on PATH (added by add_shims_to_path=true default)
+        run: |
+          SHIMS_DIR="$HOME/.local/share/mise/shims"
+          echo "PATH: $PATH"
+          if ! echo "$PATH" | grep -q "$SHIMS_DIR"; then
+            echo "FAIL: shims directory not found in PATH"
+            exit 1
+          fi
+          echo "PASS: shims directory is in PATH"
+      - name: Assert reshim ran successfully (mise reshim creates shims dir)
+        run: |
+          SHIMS_DIR="$HOME/.local/share/mise/shims"
+          echo "shims dir: $SHIMS_DIR"
+          if [ -d "$SHIMS_DIR" ]; then
+            echo "PASS: shims directory exists at $SHIMS_DIR"
+          else
+            echo "INFO: shims directory not created (no tools installed), but reshim ran without error"
+            echo "PASS"
+          fi

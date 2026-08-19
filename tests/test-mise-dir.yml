@@ -1,4 +1,4 @@
-name: Test mise with custom mise_dir
+name: Test mise installation with custom mise_dir
 on:
   workflow_dispatch:
 jobs:
@@ -6,27 +6,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - id: mise
+      - id: action
         uses: .
         with:
           mise_dir: "/tmp/custom-mise-dir"
           install: "false"
           cache: "false"
-      - name: Assert mise binary is available
+          env: "false"
+      - name: Assert mise binary exists in custom mise_dir
         run: |
-          echo "Checking mise is in PATH..."
-          if ! command -v mise &>/dev/null; then
-            echo "FAIL: mise not found in PATH"
+          echo "Checking for mise binary in /tmp/custom-mise-dir"
+          ls -la /tmp/custom-mise-dir/ || true
+          if [ ! -f "/tmp/custom-mise-dir/bin/mise" ]; then
+            echo "FAIL: mise binary not found in custom mise_dir /tmp/custom-mise-dir/bin/mise"
             exit 1
           fi
-          MISE_VERSION=$(mise --version)
-          echo "mise version: $MISE_VERSION"
-          echo "PASS: mise binary is available"
-      - name: Assert custom mise_dir was used
+          echo "PASS: mise binary found in custom mise_dir"
+      - name: Assert mise is functional
         run: |
-          echo "Checking custom mise_dir /tmp/custom-mise-dir..."
-          if [ ! -d "/tmp/custom-mise-dir" ]; then
-            echo "FAIL: custom mise_dir /tmp/custom-mise-dir does not exist"
+          VERSION=$(/tmp/custom-mise-dir/bin/mise --version)
+          echo "mise version: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: mise --version returned empty"
             exit 1
           fi
-          echo "PASS: custom mise_dir exists"
+          echo "PASS: mise is functional in custom mise_dir"

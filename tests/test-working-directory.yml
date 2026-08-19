@@ -1,4 +1,4 @@
-name: Test mise with working_directory
+name: Test mise with working_directory input
 on:
   workflow_dispatch:
 jobs:
@@ -6,21 +6,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Create working directory
-        run: mkdir -p /tmp/mise-workdir
-      - id: mise
+      - name: Create working directory with mise config
+        run: |
+          mkdir -p /tmp/mise-test-workdir
+          cat > /tmp/mise-test-workdir/mise.toml << 'EOF'
+          [tools]
+          usage = "latest"
+          EOF
+      - id: action
         uses: .
         with:
-          working_directory: "/tmp/mise-workdir"
-          install: "false"
+          working_directory: "/tmp/mise-test-workdir"
           cache: "false"
-      - name: Assert mise binary is available
+          env: "false"
+      - name: Assert mise is on PATH
         run: |
-          echo "Checking mise is in PATH..."
-          if ! command -v mise &>/dev/null; then
-            echo "FAIL: mise not found in PATH"
+          if ! which mise; then
+            echo "FAIL: mise not found on PATH"
             exit 1
           fi
-          MISE_VERSION=$(mise --version)
-          echo "mise version: $MISE_VERSION"
-          echo "PASS: mise binary is available with working_directory set"
+          echo "PASS: mise is on PATH"
+      - name: Assert usage was installed from working directory config
+        run: |
+          cd /tmp/mise-test-workdir
+          USAGE_PATH=$(mise which usage 2>/dev/null || echo "")
+          echo "usage path: $USAGE_PATH"
+          if [ -z "$USAGE_PATH" ]; then
+            echo "FAIL: usage not installed after mise install in working_directory"
+            exit 1
+          fi
+          echo "PASS: usage installed at: $USAGE_PATH"

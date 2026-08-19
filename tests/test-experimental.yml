@@ -1,4 +1,4 @@
-name: Test mise with install disabled
+name: Test mise with experimental flag
 on:
   workflow_dispatch:
 jobs:
@@ -11,6 +11,7 @@ jobs:
         with:
           install: "false"
           cache: "false"
+          experimental: "true"
           env: "false"
       - name: Assert mise is on PATH
         run: |
@@ -19,17 +20,11 @@ jobs:
             exit 1
           fi
           echo "PASS: mise is on PATH"
-      - name: Assert mise version runs
+      - name: Assert MISE_EXPERIMENTAL env var is set
         run: |
-          VERSION=$(mise --version)
-          echo "mise version: $VERSION"
-          if [ -z "$VERSION" ]; then
-            echo "FAIL: mise --version returned empty"
+          echo "MISE_EXPERIMENTAL: $MISE_EXPERIMENTAL"
+          if [ "$MISE_EXPERIMENTAL" != "1" ]; then
+            echo "FAIL: expected MISE_EXPERIMENTAL=1, got: $MISE_EXPERIMENTAL"
             exit 1
           fi
-          echo "PASS: mise version: $VERSION"
-      - name: Assert mise ls runs without error
-        run: |
-          OUTPUT=$(mise ls 2>&1 || true)
-          echo "mise ls output: $OUTPUT"
-          echo "PASS: mise ls ran without error"
+          echo "PASS: MISE_EXPERIMENTAL=1 as expected"

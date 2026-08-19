@@ -1,4 +1,4 @@
-name: Test mise with install_args
+name: Test mise with install_args to install specific tool
 on:
   workflow_dispatch:
 jobs:
@@ -6,32 +6,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - id: mise
+      - id: action
         uses: .
         with:
           mise_toml: |
             [tools]
-            node = "20.0.0"
-          install_args: "node"
+            usage = "latest"
+          install_args: "usage"
           cache: "false"
-      - name: Assert node is installed
+          env: "false"
+      - name: Assert mise is on PATH
         run: |
-          echo "Checking node is available..."
-          if ! command -v node &>/dev/null; then
-            echo "FAIL: node not found in PATH"
+          if ! which mise; then
+            echo "FAIL: mise not found on PATH"
             exit 1
           fi
-          NODE_VERSION=$(node --version)
-          echo "node version: $NODE_VERSION"
-          if [[ "$NODE_VERSION" != v20* ]]; then
-            echo "FAIL: expected node v20.x, got $NODE_VERSION"
-            exit 1
-          fi
-          echo "PASS: node $NODE_VERSION is available"
-      - name: Assert mise is available
+          echo "PASS: mise is on PATH"
+      - name: Assert usage was installed
         run: |
-          if ! command -v mise &>/dev/null; then
-            echo "FAIL: mise not found in PATH"
+          USAGE_PATH=$(mise which usage 2>/dev/null || echo "")
+          echo "usage path: $USAGE_PATH"
+          if [ -z "$USAGE_PATH" ]; then
+            echo "FAIL: usage not installed after mise install usage"
             exit 1
           fi
-          echo "PASS: mise is available"
+          echo "PASS: usage installed at: $USAGE_PATH"
