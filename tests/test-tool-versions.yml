@@ -1,0 +1,39 @@
+name: Test tool_versions input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          tool_versions: |
+            node 22.0.0
+          install: "true"
+      - name: Assert .tool-versions file was written
+        run: |
+          echo "Checking .tool-versions file..."
+          if [ ! -f ".tool-versions" ]; then
+            echo "FAIL: .tool-versions file not found"
+            exit 1
+          fi
+          CONTENT="$(cat .tool-versions)"
+          echo "Contents: $CONTENT"
+          if echo "$CONTENT" | grep -q "node"; then
+            echo "PASS: .tool-versions contains node entry"
+          else
+            echo "FAIL: .tool-versions does not contain expected node entry"
+            exit 1
+          fi
+      - name: Assert node is available via mise
+        run: |
+          echo "Checking node availability..."
+          if ! command -v node &>/dev/null; then
+            echo "FAIL: node not found on PATH after mise install"
+            exit 1
+          fi
+          NODE_VERSION="$(node --version)"
+          echo "node version: $NODE_VERSION"
+          echo "PASS: node is available"

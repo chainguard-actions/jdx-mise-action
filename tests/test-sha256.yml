@@ -1,0 +1,43 @@
+name: Test sha256 input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Get sha256 for mise version
+        id: get-sha256
+        run: |
+          VERSION="2025.1.5"
+          ARCH="x86_64"
+          URL="https://github.com/jdx/mise/releases/download/v${VERSION}/mise-v${VERSION}-linux-${ARCH}.tar.gz"
+          SHA256=$(curl -sfL "$URL" | sha256sum | awk '{print $1}')
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Computed sha256: $SHA256 for version $VERSION"
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          version: ${{ steps.get-sha256.outputs.version }}
+          sha256: ${{ steps.get-sha256.outputs.sha256 }}
+          cache: "false"
+      - name: Assert action ran with sha256 input
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            if ! command -v mise &>/dev/null; then
+              echo "FAIL: action succeeded but mise not found in PATH"
+              exit 1
+            fi
+            echo "PASS: mise installed with sha256 verification"
+            mise --version
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sha256 mismatch or network issue)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

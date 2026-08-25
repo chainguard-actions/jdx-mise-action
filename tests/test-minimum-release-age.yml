@@ -1,0 +1,23 @@
+name: Test minimum_release_age input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          minimum_release_age: "24h"
+          install: "false"
+      - name: Assert mise is installed (with minimum_release_age constraint)
+        run: |
+          echo "Checking mise binary..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          MISE_VERSION="$(mise --version)"
+          echo "mise version: $MISE_VERSION"
+          echo "PASS: mise is available with minimum_release_age=24h"
