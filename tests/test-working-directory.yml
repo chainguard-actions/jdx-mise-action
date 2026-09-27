@@ -1,0 +1,27 @@
+name: Test working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory with mise.toml
+        run: |
+          mkdir -p /tmp/mise-workdir
+          cat > /tmp/mise-workdir/mise.toml <<'EOF'
+          [tools]
+          node = "lts"
+          EOF
+      - id: action
+        uses: .
+        with:
+          working_directory: "/tmp/mise-workdir"
+          cache: "false"
+      - name: Assert node is available from working_directory config
+        run: |
+          if ! command -v node >/dev/null 2>&1; then
+            echo "FAIL: node not found after using working_directory with mise.toml"
+            exit 1
+          fi
+          echo "PASS: node is available"

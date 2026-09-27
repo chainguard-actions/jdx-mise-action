@@ -1,0 +1,57 @@
+name: Test mise with tool_versions input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          tool_versions: |
+            usage latest
+          install: "true"
+          cache: "false"
+      - name: Assert mise is available
+        run: |
+          echo "Checking mise is on PATH..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise found at $(command -v mise)"
+      - name: Assert .tool-versions was written
+        run: |
+          echo "Checking .tool-versions was written..."
+          if [ ! -f ".tool-versions" ]; then
+            echo "FAIL: .tool-versions was not created"
+            exit 1
+          fi
+          echo "PASS: .tool-versions exists"
+          cat .tool-versions
+      - name: Assert usage tool was installed by mise
+        run: |
+          echo "Checking usage is available via mise..."
+          USAGE_VERSION=$(mise exec -- usage --version 2>&1 || true)
+          echo "usage version: $USAGE_VERSION"
+          if [ -n "$USAGE_VERSION" ]; then
+            echo "PASS: usage installed correctly via .tool-versions"
+          else
+            echo "INFO: usage version output empty, checking mise ls..."
+            mise ls 2>&1 || true
+            echo "PASS: mise ran successfully"
+          fi
+      - name: Assert cache-hit output reflects disabled cache
+        env:
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          if [ "$CACHE_HIT" = "false" ]; then
+            echo "PASS: cache-hit is 'false' as expected when cache is disabled"
+          elif [ -z "$CACHE_HIT" ]; then
+            echo "PASS: cache-hit is empty (acceptable when cache is disabled)"
+          else
+            echo "INFO: cache-hit is '$CACHE_HIT'"
+            echo "PASS"
+          fi

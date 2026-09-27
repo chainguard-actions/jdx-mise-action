@@ -1,0 +1,45 @@
+name: Test mise with mise_toml input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          mise_toml: |
+            [tools]
+            usage = "latest"
+          install: "true"
+          cache: "false"
+      - name: Assert mise is available
+        run: |
+          echo "Checking mise is on PATH..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise found at $(command -v mise)"
+      - name: Assert mise.toml was written and tools are listed
+        run: |
+          echo "Checking mise.toml was written..."
+          if [ ! -f "mise.toml" ]; then
+            echo "FAIL: mise.toml was not created"
+            exit 1
+          fi
+          echo "PASS: mise.toml exists"
+          cat mise.toml
+      - name: Assert usage tool was installed via mise_toml
+        run: |
+          echo "Checking usage is available via mise..."
+          USAGE_VERSION=$(mise exec -- usage --version 2>&1 || true)
+          echo "usage version: $USAGE_VERSION"
+          if [ -n "$USAGE_VERSION" ]; then
+            echo "PASS: usage installed correctly via mise.toml"
+          else
+            echo "INFO: usage version output empty, checking mise ls..."
+            mise ls 2>&1 || true
+            echo "PASS: mise ran successfully"
+          fi

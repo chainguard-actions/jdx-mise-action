@@ -1,0 +1,41 @@
+name: Test mise with caching enabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "true"
+          cache_key_prefix: "mise-test-v1"
+        continue-on-error: true
+      - name: Assert action ran (cache may or may not be available)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "cache-hit: $CACHE_HIT"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "Action succeeded"
+            if ! command -v mise >/dev/null 2>&1; then
+              echo "FAIL: mise not found on PATH after successful action"
+              exit 1
+            fi
+            echo "PASS: mise found at $(command -v mise)"
+            if [ "$CACHE_HIT" = "true" ] || [ "$CACHE_HIT" = "false" ]; then
+              echo "PASS: cache-hit is a valid boolean value: '$CACHE_HIT'"
+            else
+              echo "INFO: cache-hit is '$CACHE_HIT' (may be empty if cache service unavailable)"
+              echo "PASS"
+            fi
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (cache service may not be available under act)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

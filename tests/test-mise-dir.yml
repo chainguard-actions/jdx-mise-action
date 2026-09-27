@@ -1,0 +1,21 @@
+name: Test mise_dir input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          mise_dir: "/tmp/custom-mise-dir"
+          install: "false"
+          cache: "false"
+      - name: Assert mise installed to custom dir
+        run: |
+          if [ ! -d "/tmp/custom-mise-dir" ]; then
+            echo "FAIL: custom mise_dir /tmp/custom-mise-dir does not exist"
+            exit 1
+          fi
+          echo "PASS: custom mise_dir exists"
