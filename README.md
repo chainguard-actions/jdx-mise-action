@@ -8,6 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
+| v2.4.4 | [`v2.4.4`](https://github.com/chainguard-actions/jdx-mise-action/tree/v2.4.4) | [`c37c932`](https://github.com/jdx/mise-action/commit/c37c93293d6b742fc901e1406b8f764f6fb19dac) |
 | v4.0.0 | [`v4.0.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.0.0) | [`c1ecc8f`](https://github.com/jdx/mise-action/commit/c1ecc8f748cd28cdeabf76dab3cccde4ce692fe4) |
 | v4.0.1 | [`v4.0.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.0.1) | [`1648a78`](https://github.com/jdx/mise-action/commit/1648a7812b9aeae629881980618f079932869151) |
 | v4.1.0 | [`v4.1.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.1.0) | [`dba1968`](https://github.com/jdx/mise-action/commit/dba19683ed58901619b14f395a24841710cb4925) |
