@@ -1,0 +1,22 @@
+name: Test install_dir input (deprecated)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install_dir: /tmp/mise-install-dir-deprecated
+          install: "false"
+          cache: "false"
+      - name: Assert action completed (install_dir is deprecated but accepted)
+        run: |
+          echo "Checking mise is available after using deprecated install_dir input..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise command not found in PATH"
+            exit 1
+          fi
+          echo "PASS: action completed successfully with deprecated install_dir input"

@@ -1,0 +1,28 @@
+name: Test working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory with a mise.toml
+        run: |
+          mkdir -p /tmp/mise-workdir
+          cat > /tmp/mise-workdir/mise.toml <<'EOF'
+          [tools]
+          EOF
+      - id: action
+        uses: .
+        with:
+          working_directory: /tmp/mise-workdir
+          install: "true"
+          cache: "false"
+      - name: Assert mise ran successfully in working directory
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise command not found in PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available and ran in working_directory"

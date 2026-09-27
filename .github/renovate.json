@@ -1,0 +1,14 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>jdx/renovate-config"
+  ],
+  "postUpgradeTasks": {
+    "commands": ["npm run all"],
+    "fileFilters": ["dist/**/*"],
+    "executionMode": "branch"
+  },
+  "allowedCommands": [
+    ".*"
+  ]
+}

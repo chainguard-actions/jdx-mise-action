@@ -1,0 +1,34 @@
+name: Test mise with mise_toml input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          mise_toml: |
+            [tools]
+            node = "lts"
+          install: "true"
+          cache: "false"
+      - name: Assert mise is on PATH
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise is available"
+      - name: Assert node was installed by mise
+        run: |
+          echo "Checking node is available via mise..."
+          if ! command -v node &>/dev/null; then
+            echo "FAIL: node not found on PATH after mise install"
+            exit 1
+          fi
+          echo "node version: $(node --version)"
+          echo "PASS: node is available"

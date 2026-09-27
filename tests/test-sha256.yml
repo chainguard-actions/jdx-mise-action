@@ -1,0 +1,35 @@
+name: Test sha256 input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Fetch SHA256 for a specific mise version
+        id: fetch-sha256
+        run: |
+          VERSION="v2024.1.0"
+          ARCH="linux-x64"
+          SHA_URL="https://github.com/jdx/mise/releases/download/${VERSION}/mise-${VERSION}-${ARCH}.tar.gz.sha256"
+          SHA256=$(curl -sfL "$SHA_URL" | awk '{print $1}')
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Fetched SHA256: $SHA256 for version $VERSION"
+      - id: action
+        uses: .
+        with:
+          version: ${{ steps.fetch-sha256.outputs.version }}
+          sha256: ${{ steps.fetch-sha256.outputs.sha256 }}
+          install: "false"
+          cache: "false"
+      - name: Assert mise installed with sha256 verification
+        run: |
+          echo "Checking mise is available after sha256-verified install..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise command not found in PATH"
+            exit 1
+          fi
+          MISE_VERSION=$(mise --version 2>&1 || true)
+          echo "mise version: $MISE_VERSION"
+          echo "PASS: mise installed successfully with sha256 verification"
