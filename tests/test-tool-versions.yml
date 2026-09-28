@@ -1,0 +1,25 @@
+name: Test mise with tool-versions configuration
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          tool_versions: |
+            python 3.12
+          install: "true"
+      - name: Assert python is installed via mise
+        run: |
+          echo "Checking python is available..."
+          which python3 || which python || { echo "FAIL: python not found on PATH"; exit 1; }
+          PYTHON_VERSION=$(python3 --version 2>&1 || python --version 2>&1)
+          echo "python version: $PYTHON_VERSION"
+          if ! echo "$PYTHON_VERSION" | grep -q "3\.12"; then
+            echo "FAIL: expected python 3.12.x, got $PYTHON_VERSION"
+            exit 1
+          fi
+          echo "PASS: python 3.12 installed via mise"

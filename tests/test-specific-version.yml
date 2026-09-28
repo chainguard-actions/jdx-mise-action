@@ -1,0 +1,23 @@
+name: Test specific mise version installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: "2025.1.5"
+          install: "false"
+      - name: Assert correct mise version is installed
+        run: |
+          echo "Checking mise version..."
+          INSTALLED_VERSION=$(mise --version 2>&1 | head -1 | awk '{print $1}')
+          echo "Installed version: $INSTALLED_VERSION"
+          if [ "$INSTALLED_VERSION" != "2025.1.5" ]; then
+            echo "FAIL: expected version 2025.1.5, got $INSTALLED_VERSION"
+            exit 1
+          fi
+          echo "PASS: correct mise version installed"

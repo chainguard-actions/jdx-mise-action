@@ -1,0 +1,30 @@
+name: Test mise installation without cache
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          cache: "false"
+          install: "false"
+      - name: Assert mise is on PATH even without cache
+        run: |
+          echo "Checking mise is available..."
+          which mise || { echo "FAIL: mise not found on PATH"; exit 1; }
+          mise --version
+          echo "PASS: mise is available without cache"
+      - name: Assert cache-hit is false when cache disabled
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          # When cache is disabled, cache-hit should be false or empty
+          if [ "$CACHE_HIT" = "true" ]; then
+            echo "FAIL: cache-hit should not be true when cache is disabled"
+            exit 1
+          fi
+          echo "PASS: cache-hit is not true when cache is disabled"

@@ -1,0 +1,36 @@
+name: Test mise with mise.toml configuration
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          mise_toml: |
+            [tools]
+            node = "22"
+          install: "true"
+      - name: Assert node is installed via mise
+        run: |
+          echo "Checking node is available..."
+          which node || { echo "FAIL: node not found on PATH"; exit 1; }
+          NODE_VERSION=$(node --version)
+          echo "node version: $NODE_VERSION"
+          if ! echo "$NODE_VERSION" | grep -q "^v22"; then
+            echo "FAIL: expected node v22.x, got $NODE_VERSION"
+            exit 1
+          fi
+          echo "PASS: node v22 installed via mise"
+      - name: Assert cache-hit output is set
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          if [ "$CACHE_HIT" != "true" ] && [ "$CACHE_HIT" != "false" ]; then
+            echo "FAIL: cache-hit output should be 'true' or 'false', got: '$CACHE_HIT'"
+            exit 1
+          fi
+          echo "PASS: cache-hit output is valid"

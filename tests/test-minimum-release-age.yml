@@ -1,0 +1,20 @@
+name: Test mise with minimum_release_age set to 0s
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          minimum_release_age: "0s"
+          install: "false"
+      - name: Assert mise is installed with no release age delay
+        run: |
+          echo "Checking mise is available..."
+          which mise || { echo "FAIL: mise not found on PATH"; exit 1; }
+          MISE_VERSION=$(mise --version 2>&1 | head -1)
+          echo "mise version: $MISE_VERSION"
+          echo "PASS: mise installed with minimum_release_age=0s"
