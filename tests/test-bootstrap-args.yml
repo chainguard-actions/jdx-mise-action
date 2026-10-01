@@ -1,0 +1,23 @@
+name: Test bootstrap_args and bootstrap_skip
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          bootstrap: "true"
+          bootstrap_skip: "tools,task"
+          bootstrap_args: "--help"
+          cache: "false"
+      - name: Assert mise is available
+        run: |
+          echo "Checking mise is on PATH..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available"

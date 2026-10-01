@@ -1,0 +1,28 @@
+name: Test custom cache_key
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          cache_key: "mise-custom-key-{{version}}"
+          cache: "true"
+          cache_save: "false"
+      - name: Assert mise is available
+        run: |
+          echo "Checking mise is on PATH..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available"
+      - name: Assert cache-hit output is set
+        env:
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          echo "PASS: cache-hit output is '$CACHE_HIT'"

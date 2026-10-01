@@ -1,0 +1,36 @@
+name: Test mise with custom mise_dir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          mise_dir: "/tmp/custom-mise-dir"
+          install: "false"
+          cache: "false"
+      - name: Assert mise binary exists in custom directory
+        run: |
+          MISE_BIN="/tmp/custom-mise-dir/bin/mise"
+          echo "Checking for mise binary at: $MISE_BIN"
+          if [ ! -f "$MISE_BIN" ]; then
+            echo "FAIL: mise binary not found at $MISE_BIN"
+            exit 1
+          fi
+          echo "PASS: mise binary found at $MISE_BIN"
+      - name: Assert mise is on PATH and functional
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          VERSION=$(mise --version 2>&1 || true)
+          echo "mise version: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: mise --version returned empty output"
+            exit 1
+          fi
+          echo "PASS: mise is functional: $VERSION"
