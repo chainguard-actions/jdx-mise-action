@@ -1,0 +1,34 @@
+name: Test basic mise installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory for mise
+        run: mkdir -p /tmp/mise-test-workdir
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          working_directory: /tmp/mise-test-workdir
+      - name: Assert mise is installed
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise binary not found in PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise is installed"
+      - name: Assert cache-hit output is set
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          if [ -z "$CACHE_HIT" ]; then
+            echo "FAIL: cache-hit output is empty"
+            exit 1
+          fi
+          echo "PASS: cache-hit is '$CACHE_HIT'"

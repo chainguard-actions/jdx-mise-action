@@ -1,0 +1,57 @@
+name: Test mise with tool_versions input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory with .tool-versions
+        run: |
+          mkdir -p /tmp/mise-test-workdir
+          echo "node 20.0.0" > /tmp/mise-test-workdir/.tool-versions
+      - id: mise
+        uses: .
+        with:
+          tool_versions: |
+            node 20.0.0
+          install: "true"
+          cache: "false"
+          working_directory: /tmp/mise-test-workdir
+      - name: Assert node is installed
+        run: |
+          if ! command -v node &>/dev/null; then
+            echo "FAIL: node binary not found in PATH"
+            exit 1
+          fi
+          NODE_VER="$(node --version)"
+          echo "node version: $NODE_VER"
+          if [[ "$NODE_VER" != v20* ]]; then
+            echo "FAIL: expected node v20.x, got $NODE_VER"
+            exit 1
+          fi
+          echo "PASS: node $NODE_VER is installed"
+      - name: Assert versions output contains node
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          if [ -z "$VERSIONS" ]; then
+            echo "FAIL: versions output is empty"
+            exit 1
+          fi
+          if ! echo "$VERSIONS" | grep -q '"node"'; then
+            echo "FAIL: versions output does not contain 'node'"
+            exit 1
+          fi
+          echo "PASS: versions output contains node"
+      - name: Assert node output is set
+        env:
+          NODE_OUTPUT: ${{ steps.mise.outputs.node }}
+        run: |
+          echo "node output: $NODE_OUTPUT"
+          if [ -z "$NODE_OUTPUT" ]; then
+            echo "FAIL: node output is empty"
+            exit 1
+          fi
+          echo "PASS: node output is '$NODE_OUTPUT'"

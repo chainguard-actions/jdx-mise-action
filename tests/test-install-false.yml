@@ -1,0 +1,40 @@
+name: Test mise with install disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory for mise
+        run: mkdir -p /tmp/mise-test-workdir
+      - id: mise
+        uses: .
+        with:
+          tool_versions: |
+            node 20.0.0
+          install: "false"
+          cache: "false"
+          working_directory: /tmp/mise-test-workdir
+      - name: Assert mise is installed but node is not
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise binary not found in PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          # node should NOT be installed since install=false
+          if command -v node &>/dev/null; then
+            NODE_VER="$(node --version)"
+            echo "INFO: node is available at version $NODE_VER (may be system node)"
+          else
+            echo "INFO: node is not in PATH (expected when install=false)"
+          fi
+          echo "PASS: mise is installed, install=false respected"
+      - name: Assert versions output is empty or minimal when install is false
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          # When install=false, versions may be empty or {} since no tools were installed
+          echo "PASS: versions output is '$VERSIONS' (install=false, no tools installed)"

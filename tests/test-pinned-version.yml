@@ -1,0 +1,40 @@
+name: Test mise with pinned version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory for mise
+        run: mkdir -p /tmp/mise-test-workdir
+      - id: mise
+        uses: .
+        with:
+          version: "2025.1.5"
+          install: "false"
+          cache: "false"
+          working_directory: /tmp/mise-test-workdir
+      - name: Assert mise version matches pinned version
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise binary not found in PATH"
+            exit 1
+          fi
+          MISE_VER="$(mise --version)"
+          echo "mise version: $MISE_VER"
+          if ! echo "$MISE_VER" | grep -q "2025.1.5"; then
+            echo "FAIL: expected mise 2025.1.5, got $MISE_VER"
+            exit 1
+          fi
+          echo "PASS: mise $MISE_VER matches pinned version"
+      - name: Assert cache-hit output is set
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          if [ -z "$CACHE_HIT" ]; then
+            echo "FAIL: cache-hit output is empty"
+            exit 1
+          fi
+          echo "PASS: cache-hit is '$CACHE_HIT'"
