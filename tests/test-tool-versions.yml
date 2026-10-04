@@ -1,0 +1,55 @@
+name: Test mise with tool_versions input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          tool_versions: |
+            node 20.0.0
+          mise_toml: |
+            [tools]
+          install: "true"
+          cache: "false"
+      - name: Assert node is installed
+        run: |
+          echo "Checking node binary..."
+          if ! command -v node &>/dev/null; then
+            echo "FAIL: node not found on PATH"
+            exit 1
+          fi
+          NODE_VERSION="$(node --version)"
+          echo "node version: $NODE_VERSION"
+          if [[ "$NODE_VERSION" != v20* ]]; then
+            echo "FAIL: expected node v20.x, got $NODE_VERSION"
+            exit 1
+          fi
+          echo "PASS: node $NODE_VERSION is available"
+      - name: Assert versions output is set
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          if [ -z "$VERSIONS" ]; then
+            echo "FAIL: versions output is empty"
+            exit 1
+          fi
+          if ! echo "$VERSIONS" | grep -q "node"; then
+            echo "FAIL: versions output does not contain 'node'"
+            exit 1
+          fi
+          echo "PASS: versions output contains node"
+      - name: Assert node output is set
+        env:
+          NODE_OUT: ${{ steps.mise.outputs.node }}
+        run: |
+          echo "node output: $NODE_OUT"
+          if [ -z "$NODE_OUT" ]; then
+            echo "FAIL: node output is empty"
+            exit 1
+          fi
+          echo "PASS: node output is '$NODE_OUT'"

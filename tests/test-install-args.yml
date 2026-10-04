@@ -1,0 +1,22 @@
+name: Test install_args and cache_key inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install_args: ""
+          cache_key: "mise-test-install-args-{{version}}"
+          cache: "true"
+      - name: Assert mise is available
+        run: |
+          echo "cache-hit: ${{ steps.mise.outputs.cache-hit }}"
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found in PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available"

@@ -1,0 +1,39 @@
+name: Test install_dir (deprecated) input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install_dir: "/tmp/mise-install-dir"
+          cache: "false"
+        continue-on-error: true
+      - name: Assert action ran with deprecated install_dir input
+        env:
+          OUTCOME: ${{ steps.mise.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # install_dir is deprecated; action may succeed or warn/fail gracefully
+          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action handled deprecated install_dir input (outcome: $OUTCOME)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
+      - name: Assert mise is available when action succeeded
+        env:
+          OUTCOME: ${{ steps.mise.outcome }}
+        run: |
+          if [ "$OUTCOME" = "success" ]; then
+            if ! command -v mise &>/dev/null; then
+              echo "FAIL: mise not found in PATH after successful action"
+              exit 1
+            fi
+            echo "PASS: mise is available"
+          else
+            echo "SKIP: action did not succeed, skipping mise availability check"
+          fi

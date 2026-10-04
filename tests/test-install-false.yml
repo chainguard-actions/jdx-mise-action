@@ -1,0 +1,41 @@
+name: Test mise with install disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          tool_versions: |
+            node 20.0.0
+      - name: Assert mise is on PATH even when install is false
+        run: |
+          echo "Checking mise binary..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise is available"
+      - name: Assert node is NOT installed by mise (install=false)
+        run: |
+          echo "Checking that node was not installed by mise..."
+          # node should not be on PATH from mise since install=false
+          if command -v node &>/dev/null; then
+            NODE_VERSION="$(node --version)"
+            echo "INFO: node found at $(command -v node) version $NODE_VERSION"
+            # node might be pre-installed on the runner, check if it's from mise
+            NODE_PATH="$(command -v node)"
+            if echo "$NODE_PATH" | grep -q "mise"; then
+              echo "FAIL: node was installed by mise despite install=false"
+              exit 1
+            fi
+            echo "PASS: node is from the system, not from mise"
+          else
+            echo "PASS: node not found (not installed by mise)"
+          fi
