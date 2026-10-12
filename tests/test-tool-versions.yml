@@ -1,0 +1,57 @@
+name: Test mise with tool_versions input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare clean working directory with .tool-versions
+        run: |
+          mkdir -p /tmp/mise-test-tool-versions
+          printf 'node 22.0.0\n' > /tmp/mise-test-tool-versions/.tool-versions
+      - id: mise
+        uses: .
+        with:
+          tool_versions: |
+            node 22.0.0
+          cache: "false"
+          working_directory: /tmp/mise-test-tool-versions
+      - name: Assert node is installed
+        run: |
+          echo "Checking node is available..."
+          if ! command -v node >/dev/null 2>&1; then
+            echo "FAIL: node not found on PATH"
+            exit 1
+          fi
+          NODE_VERSION="$(node --version)"
+          echo "node version: $NODE_VERSION"
+          if ! echo "$NODE_VERSION" | grep -q "v22"; then
+            echo "FAIL: expected node v22 but got: $NODE_VERSION"
+            exit 1
+          fi
+          echo "PASS: node v22 is installed"
+      - name: Assert versions output contains node
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          if [ -z "$VERSIONS" ]; then
+            echo "FAIL: versions output is empty"
+            exit 1
+          fi
+          if ! echo "$VERSIONS" | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'node' in d, 'node not in versions'" 2>/dev/null; then
+            echo "FAIL: node not found in versions output"
+            exit 1
+          fi
+          echo "PASS: node found in versions output"
+      - name: Assert node step output is set
+        env:
+          NODE_OUTPUT: ${{ steps.mise.outputs.node }}
+        run: |
+          echo "node output: $NODE_OUTPUT"
+          if [ -z "$NODE_OUTPUT" ]; then
+            echo "FAIL: node output is empty"
+            exit 1
+          fi
+          echo "PASS: node output is set to '$NODE_OUTPUT'"

@@ -1,0 +1,51 @@
+name: Test basic mise installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare clean working directory
+        run: mkdir -p /tmp/mise-test-basic
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          working_directory: /tmp/mise-test-basic
+      - name: Assert mise is on PATH
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise is available"
+      - name: Assert cache-hit output exists
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          # cache-hit should be true or false (not empty)
+          if [ -z "$CACHE_HIT" ]; then
+            echo "FAIL: cache-hit output is empty"
+            exit 1
+          fi
+          echo "PASS: cache-hit output is set to '$CACHE_HIT'"
+      - name: Assert versions output is valid JSON
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          # versions should be a valid JSON object (may be empty {} when no tools installed)
+          if [ -z "$VERSIONS" ]; then
+            echo "FAIL: versions output is empty"
+            exit 1
+          fi
+          if ! echo "$VERSIONS" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
+            echo "FAIL: versions output is not valid JSON"
+            exit 1
+          fi
+          echo "PASS: versions output is valid JSON"

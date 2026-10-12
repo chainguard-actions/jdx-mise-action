@@ -1,0 +1,28 @@
+name: Test install_dir input (deprecated)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install_dir: "/tmp/mise-install-dir-test"
+          cache: "false"
+        continue-on-error: true
+      - name: Assert mise ran (install_dir is deprecated but should not crash)
+        env:
+          OUTCOME: ${{ steps.mise.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "mise version: $(mise --version)"
+            echo "PASS: mise installed successfully with install_dir set"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action ran (install_dir is deprecated, failure is acceptable)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

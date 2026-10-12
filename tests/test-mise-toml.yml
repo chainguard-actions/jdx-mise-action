@@ -1,0 +1,48 @@
+name: Test mise with mise_toml input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare clean working directory with mise.toml
+        run: |
+          mkdir -p /tmp/mise-test-toml
+          printf '[tools]\nnode = "22.0.0"\n' > /tmp/mise-test-toml/mise.toml
+      - id: mise
+        uses: .
+        with:
+          mise_toml: |
+            [tools]
+            node = "22.0.0"
+          cache: "false"
+          working_directory: /tmp/mise-test-toml
+      - name: Assert node is installed via mise.toml
+        run: |
+          echo "Checking node is available..."
+          if ! command -v node >/dev/null 2>&1; then
+            echo "FAIL: node not found on PATH"
+            exit 1
+          fi
+          NODE_VERSION="$(node --version)"
+          echo "node version: $NODE_VERSION"
+          if ! echo "$NODE_VERSION" | grep -q "v22"; then
+            echo "FAIL: expected node v22 but got: $NODE_VERSION"
+            exit 1
+          fi
+          echo "PASS: node v22 is installed via mise.toml"
+      - name: Assert versions output contains node
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          if [ -z "$VERSIONS" ]; then
+            echo "FAIL: versions output is empty"
+            exit 1
+          fi
+          if ! echo "$VERSIONS" | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'node' in d, 'node not in versions'" 2>/dev/null; then
+            echo "FAIL: node not found in versions output"
+            exit 1
+          fi
+          echo "PASS: node found in versions output"

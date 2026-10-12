@@ -1,0 +1,36 @@
+name: Test mise with minimum_release_age set to 0s
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare clean working directory
+        run: mkdir -p /tmp/mise-test-min-age
+      - id: mise
+        uses: .
+        with:
+          minimum_release_age: "0s"
+          install: "false"
+          cache: "false"
+          working_directory: /tmp/mise-test-min-age
+      - name: Assert mise is installed (latest, no delay)
+        run: |
+          echo "Checking mise is available..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise installed with minimum_release_age=0s"
+      - name: Assert cache-hit output is set
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          if [ -z "$CACHE_HIT" ]; then
+            echo "FAIL: cache-hit output is empty"
+            exit 1
+          fi
+          echo "PASS: cache-hit output is set"
