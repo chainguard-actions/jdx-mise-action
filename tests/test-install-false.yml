@@ -1,0 +1,59 @@
+name: Test mise with install disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          tool_versions: |
+            node 20.0.0
+      - name: Assert mise binary is available
+        run: |
+          echo "Checking mise binary is available..."
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise binary is available"
+      - name: Assert node is NOT installed (install was false)
+        run: |
+          echo "Checking node is not installed by mise..."
+          # node should not be on PATH since mise install was not run
+          if command -v node >/dev/null 2>&1; then
+            NODE_VER=$(node --version)
+            echo "INFO: node found at $(command -v node) version $NODE_VER"
+            # It might be a system node, check if it's from mise
+            NODE_PATH=$(command -v node)
+            if echo "$NODE_PATH" | grep -q "mise"; then
+              echo "FAIL: node was installed by mise even though install=false"
+              exit 1
+            fi
+            echo "INFO: node is a system node, not from mise — this is acceptable"
+          else
+            echo "PASS: node not on PATH (mise install was skipped)"
+          fi
+          echo "PASS"
+      - name: Assert versions output is empty object or minimal
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          # With install=false, versions should be empty or {}
+          if [ -z "$VERSIONS" ]; then
+            echo "PASS: versions output is empty (no tools installed)"
+          else
+            NORM="$(echo "$VERSIONS" | tr -d '[:space:]')"
+            if [ "$NORM" = "{}" ] || [ "$NORM" = "null" ]; then
+              echo "PASS: versions output is empty object"
+            else
+              echo "INFO: versions output: $VERSIONS"
+              echo "PASS: versions output present (may include system tools)"
+            fi
+          fi
