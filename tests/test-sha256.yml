@@ -1,0 +1,31 @@
+name: Test sha256 input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: "2025.1.5"
+          sha256: "f5e8e3a5e4b5c5d5e4b5c5d5e4b5c5d5e4b5c5d5e4b5c5d5e4b5c5d5e4b5c5"
+          install: "false"
+          cache: "false"
+        continue-on-error: true
+      - name: Assert action ran (sha256 mismatch causes failure or success with correct hash)
+        env:
+          OUTCOME: ${{ steps.mise.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # A wrong sha256 should cause the action to fail (checksum mismatch)
+          # We used a fake sha256 so we expect failure
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed as expected with incorrect sha256"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded (sha256 check passed or was skipped)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

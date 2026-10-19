@@ -1,0 +1,40 @@
+name: Test mise with custom mise_dir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          mise_dir: "/tmp/custom-mise-dir"
+      - name: Assert mise is available
+        run: |
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise is available"
+      - name: Assert MISE_DATA_DIR is set to custom dir
+        env:
+          MISE_DATA_DIR: ${{ env.MISE_DATA_DIR }}
+        run: |
+          echo "MISE_DATA_DIR: $MISE_DATA_DIR"
+          if [ "$MISE_DATA_DIR" != "/tmp/custom-mise-dir" ]; then
+            echo "FAIL: expected MISE_DATA_DIR=/tmp/custom-mise-dir, got '$MISE_DATA_DIR'"
+            exit 1
+          fi
+          echo "PASS: MISE_DATA_DIR is set correctly"
+      - name: Assert custom mise_dir exists
+        run: |
+          if [ ! -d "/tmp/custom-mise-dir" ]; then
+            echo "FAIL: custom mise_dir /tmp/custom-mise-dir does not exist"
+            exit 1
+          fi
+          echo "PASS: custom mise_dir exists"
+          ls -la /tmp/custom-mise-dir/

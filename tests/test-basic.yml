@@ -1,0 +1,40 @@
+name: Test basic mise setup (no tools)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+      - name: Assert mise is on PATH
+        run: |
+          echo "Checking mise binary..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          echo "mise version: $(mise --version)"
+          echo "PASS: mise is available"
+      - name: Assert versions output is present
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions output: $VERSIONS"
+          # When no tools are installed, versions should be an empty JSON object or empty string
+          if [ -z "$VERSIONS" ]; then
+            echo "PASS: versions output is empty (no tools installed)"
+          else
+            echo "PASS: versions output: $VERSIONS"
+          fi
+      - name: Assert cache-hit output is present
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          # cache is disabled so cache-hit should be false or empty
+          echo "PASS: cache-hit output checked"

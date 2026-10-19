@@ -1,0 +1,28 @@
+name: Test working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create working directory with mise config
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/workdir"
+          cat > "$GITHUB_WORKSPACE/workdir/mise.toml" <<'EOF'
+          [tools]
+          EOF
+      - id: mise
+        uses: .
+        with:
+          install: "true"
+          working_directory: "${{ github.workspace }}/workdir"
+          cache: "false"
+      - name: Assert mise is available
+        run: |
+          echo "Checking mise is installed..."
+          if ! command -v mise &>/dev/null; then
+            echo "FAIL: mise not found in PATH"
+            exit 1
+          fi
+          echo "PASS: mise is available with working_directory set"
