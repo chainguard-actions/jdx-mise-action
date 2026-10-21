@@ -1,0 +1,28 @@
+name: Test bootstrap options are ignored when bootstrap is disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: 2026.3.10
+          cache: "false"
+          bootstrap: "false"
+          bootstrap_skip: "tools,task"
+          bootstrap_args: "--this-flag-is-not-used"
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - name: Assert regular mise install ran
+        run: |
+          V="$(jq --version)"
+          echo "jq --version: $V"
+          if [ "$V" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1 (mise install should run, bootstrap options ignored)"
+            exit 1
+          fi
+          echo "PASS"

@@ -1,0 +1,34 @@
+name: Test pinned mise version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: 2026.3.10
+          install: "false"
+          cache: "false"
+      - name: Assert mise is on PATH with pinned version
+        run: |
+          which mise || { echo "FAIL: mise not on PATH"; exit 1; }
+          V="$(mise --version)"
+          echo "mise --version: $V"
+          if ! echo "$V" | grep -q "2026.3.10"; then
+            echo "FAIL: expected version 2026.3.10"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert cache-hit is not true
+        env:
+          ACTUAL: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: '$ACTUAL'"
+          if [ "$ACTUAL" = "true" ]; then
+            echo "FAIL: cache disabled but cache-hit is true"
+            exit 1
+          fi
+          echo "PASS"

@@ -1,0 +1,40 @@
+name: Test custom mise_dir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: 2026.3.10
+          cache: "false"
+          mise_dir: /tmp/mise-custom-data
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - name: Assert MISE_DATA_DIR exported
+        run: |
+          echo "MISE_DATA_DIR=$MISE_DATA_DIR"
+          if [ "$MISE_DATA_DIR" != "/tmp/mise-custom-data" ]; then
+            echo "FAIL: expected MISE_DATA_DIR=/tmp/mise-custom-data"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert tools installed under mise_dir
+        run: |
+          ls -la /tmp/mise-custom-data || true
+          ls -la /tmp/mise-custom-data/installs || true
+          if [ ! -d /tmp/mise-custom-data/installs/jq ]; then
+            echo "FAIL: jq not installed under /tmp/mise-custom-data/installs"
+            exit 1
+          fi
+          V="$(jq --version)"
+          echo "jq --version: $V"
+          if [ "$V" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1"
+            exit 1
+          fi
+          echo "PASS"

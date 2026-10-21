@@ -1,0 +1,43 @@
+name: Test working_directory
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create sub-project with its own mise.toml
+        run: |
+          mkdir -p wd-test
+          printf '[tools]\njq = "1.7.1"\n' > wd-test/mise.toml
+          cat wd-test/mise.toml
+      - id: mise
+        uses: .
+        with:
+          version: 2026.3.10
+          cache: "false"
+          working_directory: wd-test
+          # Neutralize the repo's root mise.toml (written to the root cwd)
+          mise_toml: |
+            [env]
+            ROOT_MARKER = "root"
+      - name: Assert jq installed from sub-project config
+        working-directory: wd-test
+        run: |
+          V="$(jq --version)"
+          echo "jq --version: $V"
+          if [ "$V" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert versions output resolved in working_directory
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          if ! echo "$VERSIONS" | grep -q '1.7.1'; then
+            echo "FAIL: versions output missing jq 1.7.1 (working_directory not honored)"
+            exit 1
+          fi
+          echo "PASS"
