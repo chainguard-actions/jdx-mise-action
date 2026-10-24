@@ -1,0 +1,23 @@
+name: Test pinned mise version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: "2025.1.0"
+          cache: "false"
+          install: "false"
+      - name: Assert pinned version installed
+        run: |
+          out="$(mise --version)"
+          echo "mise --version: $out"
+          if ! echo "$out" | grep -q '2025.1.0'; then
+            echo "FAIL: expected mise 2025.1.0"
+            exit 1
+          fi
+          echo "PASS"

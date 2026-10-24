@@ -1,0 +1,28 @@
+name: Test custom mise_dir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          mise_dir: /tmp/custom-mise-dir
+          cache: "false"
+          install: "false"
+      - name: Assert MISE_DATA_DIR exported and mise works
+        run: |
+          echo "MISE_DATA_DIR=$MISE_DATA_DIR"
+          if [ "$MISE_DATA_DIR" != "/tmp/custom-mise-dir" ]; then
+            echo "FAIL: MISE_DATA_DIR not set to custom dir"
+            exit 1
+          fi
+          if [ ! -d /tmp/custom-mise-dir ]; then
+            echo "FAIL: custom mise dir not created"
+            exit 1
+          fi
+          ls -la /tmp/custom-mise-dir
+          mise --version || { echo "FAIL: mise not runnable"; exit 1; }
+          echo "PASS"

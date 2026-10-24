@@ -1,0 +1,38 @@
+name: Test installing a tool from mise_toml
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          cache: "false"
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - name: Assert jq installed and on PATH
+        run: |
+          out="$(jq --version)"
+          echo "jq --version: $out"
+          if [ "$out" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert versions output mentions jq
+        env:
+          ACTUAL: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $ACTUAL"
+          if ! echo "$ACTUAL" | grep -q 'jq'; then
+            echo "FAIL: versions output does not mention jq"
+            exit 1
+          fi
+          if ! echo "$ACTUAL" | grep -q '1.7.1'; then
+            echo "FAIL: versions output does not mention 1.7.1"
+            exit 1
+          fi
+          echo "PASS"

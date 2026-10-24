@@ -1,0 +1,33 @@
+name: Test basic install of mise (no tools)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          cache: "false"
+          install: "false"
+      - name: Assert mise is on PATH and runs
+        run: |
+          which mise || { echo "FAIL: mise not on PATH"; exit 1; }
+          out="$(mise --version)"
+          echo "mise --version: $out"
+          if ! echo "$out" | grep -qE '[0-9]{4}\.[0-9]+\.[0-9]+'; then
+            echo "FAIL: unexpected version output"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert cache-hit is not true
+        env:
+          ACTUAL: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: '$ACTUAL'"
+          if [ "$ACTUAL" = "true" ]; then
+            echo "FAIL: cache disabled but cache-hit=true"
+            exit 1
+          fi
+          echo "PASS"

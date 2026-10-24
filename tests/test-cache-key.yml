@@ -1,0 +1,36 @@
+name: Test custom cache_key template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          cache: "true"
+          cache_save: "false"
+          cache_key: "mise-act-test-{{platform}}-{{file_hash}}-${{ github.run_id }}"
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - name: Assert jq installed
+        run: |
+          out="$(jq --version)"
+          echo "jq --version: $out"
+          if [ "$out" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert cache-hit is not true for a unique key
+        env:
+          ACTUAL: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $ACTUAL"
+          if [ "$ACTUAL" = "true" ]; then
+            echo "FAIL: unexpected cache hit for unique key"
+            exit 1
+          fi
+          echo "PASS"
