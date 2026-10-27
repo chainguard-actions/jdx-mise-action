@@ -1,0 +1,27 @@
+name: Test deprecated install_dir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create sub-project config
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/idir-subproject"
+          printf 'jq 1.7.1\n' > "$GITHUB_WORKSPACE/idir-subproject/.tool-versions"
+      - id: mise
+        uses: .
+        with:
+          cache: "false"
+          install_dir: idir-subproject
+      - name: Assert jq installed from install_dir config
+        run: |
+          cd "$GITHUB_WORKSPACE/idir-subproject"
+          V="$(mise exec -- jq --version)"
+          echo "jq version: $V"
+          if ! echo "$V" | grep -q '1.7.1'; then
+            echo "FAIL: expected jq 1.7.1"
+            exit 1
+          fi
+          echo "PASS"

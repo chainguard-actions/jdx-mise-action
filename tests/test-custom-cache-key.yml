@@ -1,0 +1,25 @@
+name: Test custom cache_key template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          install: "false"
+          cache_save: "false"
+          cache_key: "act-test-{{cache_key_prefix}}-{{platform}}-{{env.GITHUB_RUN_ID}}-${{ github.run_attempt }}"
+      - name: Assert cache miss on unique key and mise works
+        env:
+          HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $HIT"
+          if [ "$HIT" = "true" ]; then
+            echo "FAIL: unique cache key should not hit"
+            exit 1
+          fi
+          mise --version || { echo "FAIL: mise not on PATH"; exit 1; }
+          echo "PASS"

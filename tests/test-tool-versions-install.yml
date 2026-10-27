@@ -1,0 +1,42 @@
+name: Test installing a tool via tool_versions
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          cache: "false"
+          tool_versions: |
+            jq 1.7.1
+      - name: Assert .tool-versions written
+        run: |
+          cat "$GITHUB_WORKSPACE/.tool-versions"
+          grep -q 'jq 1.7.1' "$GITHUB_WORKSPACE/.tool-versions" || { echo "FAIL"; exit 1; }
+          echo "PASS"
+      - name: Assert jq installed and usable
+        run: |
+          V="$(mise exec -- jq --version)"
+          echo "jq version: $V"
+          if ! echo "$V" | grep -q '1.7.1'; then
+            echo "FAIL: expected jq 1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert versions output mentions jq
+        env:
+          ACTUAL: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $ACTUAL"
+          if ! echo "$ACTUAL" | grep -q 'jq'; then
+            echo "FAIL: versions output does not mention jq"
+            exit 1
+          fi
+          if ! echo "$ACTUAL" | grep -q '1.7.1'; then
+            echo "FAIL: versions output missing 1.7.1"
+            exit 1
+          fi
+          echo "PASS"

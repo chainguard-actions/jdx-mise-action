@@ -1,0 +1,34 @@
+name: Test install_args installs only selected tool
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          cache: "false"
+          tool_versions: |
+            jq 1.7.1
+            shfmt 3.8.0
+          install_args: jq
+      - name: Assert jq installed
+        run: |
+          V="$(mise exec -- jq --version)"
+          echo "jq version: $V"
+          if ! echo "$V" | grep -q '1.7.1'; then
+            echo "FAIL: expected jq 1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert shfmt not installed
+        run: |
+          OUT="$(mise ls --installed 2>&1 || true)"
+          echo "$OUT"
+          if echo "$OUT" | grep -q 'shfmt'; then
+            echo "FAIL: shfmt should not be installed when install_args=jq"
+            exit 1
+          fi
+          echo "PASS"

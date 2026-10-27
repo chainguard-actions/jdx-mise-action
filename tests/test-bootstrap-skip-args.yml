@@ -1,0 +1,26 @@
+name: Test bootstrap with skip and args
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          cache: "false"
+          bootstrap: "true"
+          bootstrap_skip: "task"
+          bootstrap_args: "--yes"
+          tool_versions: |
+            jq 1.7.1
+      - name: Assert tools bootstrapped
+        run: |
+          V="$(mise exec -- jq --version)"
+          echo "jq version: $V"
+          if ! echo "$V" | grep -q '1.7.1'; then
+            echo "FAIL: expected jq 1.7.1 after bootstrap"
+            exit 1
+          fi
+          echo "PASS"
