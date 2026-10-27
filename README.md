@@ -6,27 +6,28 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 ## Versions
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v2.4.4 | [`v2.4.4`](https://github.com/chainguard-actions/jdx-mise-action/tree/v2.4.4) | [`c37c932`](https://github.com/jdx/mise-action/commit/c37c93293d6b742fc901e1406b8f764f6fb19dac) |
-| v4.0.0 | [`v4.0.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.0.0) | [`c1ecc8f`](https://github.com/jdx/mise-action/commit/c1ecc8f748cd28cdeabf76dab3cccde4ce692fe4) |
-| v4.0.1 | [`v4.0.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.0.1) | [`1648a78`](https://github.com/jdx/mise-action/commit/1648a7812b9aeae629881980618f079932869151) |
-| v4.1.0 | [`v4.1.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.1.0) | [`dba1968`](https://github.com/jdx/mise-action/commit/dba19683ed58901619b14f395a24841710cb4925) |
-| v4.2.0 | [`v4.2.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.0) | [`e6a8b39`](https://github.com/jdx/mise-action/commit/e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d) |
-| v4.2.2 | [`v4.2.2`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.2) | [`f10502f`](https://github.com/jdx/mise-action/commit/f10502fc09dadecfefb962fff68ce77213930204) |
-| v4.2.3 | [`v4.2.3`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.3) | [`9e7f763`](https://github.com/jdx/mise-action/commit/9e7f7633ff6f6d6048a9418a68d48f288f50eb14) |
-| v4.2.4 | [`v4.2.4`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.4) | [`7e36c90`](https://github.com/jdx/mise-action/commit/7e36c90d9ab29c415a2384db3006f3ec8a8cc654) |
-| v4.2.5 | [`v4.2.5`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.5) | [`3c2e0cf`](https://github.com/jdx/mise-action/commit/3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518) |
-| v4.3.0 | [`v4.3.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.3.0) | [`c2a8761`](https://github.com/jdx/mise-action/commit/c2a87611a18de5b3828c5652fe268e992400cb5c) |
-| v5.0.0 | [`v5.0.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.0.0) | [`9149ea8`](https://github.com/jdx/mise-action/commit/9149ea85001c7435d5a66bb127d6a1b6227cb0a5) |
-| v5.0.1 | [`v5.0.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.0.1) | [`7a4e45a`](https://github.com/jdx/mise-action/commit/7a4e45a543138629540c9a1616d08632b893e492) |
-| v5.1.0 | [`v5.1.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.1.0) | [`94c60b3`](https://github.com/jdx/mise-action/commit/94c60b39bc2d90ab2f9bab27f38d3cc4812c1834) |
-| v5.1.1 | [`v5.1.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.1.1) | [`2d8d4ca`](https://github.com/jdx/mise-action/commit/2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca) |
-| v5.1.2 | [`v5.1.2`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.1.2) | [`08ae2a0`](https://github.com/jdx/mise-action/commit/08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8) |
-| v5.2.0 | [`v5.2.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.0) | [`9b200bc`](https://github.com/jdx/mise-action/commit/9b200bcecbfd6303e69a4a261b2e09e3757440a7) |
-| v5.2.1 | [`v5.2.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.1) | [`fc42bcc`](https://github.com/jdx/mise-action/commit/fc42bcc7ddbf51124c30f95a877a0c5168a3bfde) |
-| v5.2.2 | [`v5.2.2`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.2) | [`8418fed`](https://github.com/jdx/mise-action/commit/8418fedb1110381a0d3ba51a7a415d7c1b884550) |
-| v5.2.3 | [`v5.2.3`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.3) | [`82a612c`](https://github.com/jdx/mise-action/commit/82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e) |
+| Version | Tag | Upstream commit | Hardening report |
+|---------|-----|-----------------|------------------|
+| v2.4.4 | [`v2.4.4`](https://github.com/chainguard-actions/jdx-mise-action/tree/v2.4.4) | [`c37c932`](https://github.com/jdx/mise-action/commit/c37c93293d6b742fc901e1406b8f764f6fb19dac) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v2.4.4/HARDENING.md) |
+| v4.0.0 | [`v4.0.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.0.0) | [`c1ecc8f`](https://github.com/jdx/mise-action/commit/c1ecc8f748cd28cdeabf76dab3cccde4ce692fe4) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v4.0.0/HARDENING.md) |
+| v4.0.1 | [`v4.0.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.0.1) | [`1648a78`](https://github.com/jdx/mise-action/commit/1648a7812b9aeae629881980618f079932869151) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v4.0.1/HARDENING.md) |
+| v4.1.0 | [`v4.1.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.1.0) | [`dba1968`](https://github.com/jdx/mise-action/commit/dba19683ed58901619b14f395a24841710cb4925) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v4.1.0/HARDENING.md) |
+| v4.2.0 | [`v4.2.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.0) | [`e6a8b39`](https://github.com/jdx/mise-action/commit/e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v4.2.0/HARDENING.md) |
+| v4.2.2 | [`v4.2.2`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.2) | [`f10502f`](https://github.com/jdx/mise-action/commit/f10502fc09dadecfefb962fff68ce77213930204) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v4.2.2/HARDENING.md) |
+| v4.2.3 | [`v4.2.3`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.3) | [`9e7f763`](https://github.com/jdx/mise-action/commit/9e7f7633ff6f6d6048a9418a68d48f288f50eb14) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v4.2.3/HARDENING.md) |
+| v4.2.4 | [`v4.2.4`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.4) | [`7e36c90`](https://github.com/jdx/mise-action/commit/7e36c90d9ab29c415a2384db3006f3ec8a8cc654) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v4.2.4/HARDENING.md) |
+| v4.2.5 | [`v4.2.5`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.2.5) | [`3c2e0cf`](https://github.com/jdx/mise-action/commit/3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v4.2.5/HARDENING.md) |
+| v4.3.0 | [`v4.3.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v4.3.0) | [`c2a8761`](https://github.com/jdx/mise-action/commit/c2a87611a18de5b3828c5652fe268e992400cb5c) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v4.3.0/HARDENING.md) |
+| v5.0.0 | [`v5.0.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.0.0) | [`9149ea8`](https://github.com/jdx/mise-action/commit/9149ea85001c7435d5a66bb127d6a1b6227cb0a5) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.0.0/HARDENING.md) |
+| v5.0.1 | [`v5.0.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.0.1) | [`7a4e45a`](https://github.com/jdx/mise-action/commit/7a4e45a543138629540c9a1616d08632b893e492) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.0.1/HARDENING.md) |
+| v5.1.0 | [`v5.1.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.1.0) | [`94c60b3`](https://github.com/jdx/mise-action/commit/94c60b39bc2d90ab2f9bab27f38d3cc4812c1834) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.1.0/HARDENING.md) |
+| v5.1.1 | [`v5.1.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.1.1) | [`2d8d4ca`](https://github.com/jdx/mise-action/commit/2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.1.1/HARDENING.md) |
+| v5.1.2 | [`v5.1.2`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.1.2) | [`08ae2a0`](https://github.com/jdx/mise-action/commit/08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.1.2/HARDENING.md) |
+| v5.2.0 | [`v5.2.0`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.0) | [`9b200bc`](https://github.com/jdx/mise-action/commit/9b200bcecbfd6303e69a4a261b2e09e3757440a7) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.2.0/HARDENING.md) |
+| v5.2.1 | [`v5.2.1`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.1) | [`fc42bcc`](https://github.com/jdx/mise-action/commit/fc42bcc7ddbf51124c30f95a877a0c5168a3bfde) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.2.1/HARDENING.md) |
+| v5.2.2 | [`v5.2.2`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.2) | [`8418fed`](https://github.com/jdx/mise-action/commit/8418fedb1110381a0d3ba51a7a415d7c1b884550) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.2.2/HARDENING.md) |
+| v5.2.3 | [`v5.2.3`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.3) | [`82a612c`](https://github.com/jdx/mise-action/commit/82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.2.3/HARDENING.md) |
+| v5.2.4 | [`v5.2.4`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.4) | [`6be3c7e`](https://github.com/jdx/mise-action/commit/6be3c7ed4c21d4f76b208d351d95aac273ebb76d) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.2.4/HARDENING.md) |
 
 ## Privacy
 
