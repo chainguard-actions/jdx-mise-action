@@ -1,0 +1,37 @@
+name: Test pinned mise version with sha256
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          install: false
+          version: v2025.7.3
+          sha256: d38d4993c5379a680b50661f86287731dc1d1264777880a79b786403af337948
+          mise_toml: |
+            [env]
+            PINNED_VAR = "pinned"
+      - name: Assert mise version
+        run: |
+          out="$(mise --version)"
+          echo "mise --version: $out"
+          if ! echo "$out" | grep -q '2025.7.3'; then
+            echo "FAIL: expected mise 2025.7.3"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert env loaded
+        run: |
+          echo "PINNED_VAR=$PINNED_VAR"
+          if [ "$PINNED_VAR" != "pinned" ]; then
+            echo "FAIL: expected PINNED_VAR=pinned"
+            exit 1
+          fi
+          echo "PASS"

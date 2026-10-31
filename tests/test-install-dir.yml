@@ -1,0 +1,30 @@
+name: Test deprecated install_dir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Create sub-project with its own mise config
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/installdir-subproject"
+          printf '[tools]\njq = "1.7.1"\n' > "$GITHUB_WORKSPACE/installdir-subproject/mise.toml"
+          echo "MISE_TRUSTED_CONFIG_PATHS=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          install_dir: installdir-subproject
+      - name: Assert jq from sub-project config was installed
+        working-directory: installdir-subproject
+        run: |
+          out="$(mise x jq -- jq --version)"
+          echo "jq version: $out"
+          if [ "$out" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1"
+            exit 1
+          fi
+          echo "PASS"

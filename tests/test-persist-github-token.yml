@@ -1,0 +1,27 @@
+name: Test persist_github_token with explicit value
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          install: false
+          persist_github_token: mise-action-persist-test-token
+          mise_toml: |
+            [env]
+            SOME_VAR = "x"
+      - name: Assert token persisted
+        run: |
+          if [ "$MISE_GITHUB_TOKEN" != "mise-action-persist-test-token" ]; then
+            echo "FAIL: MISE_GITHUB_TOKEN not persisted with expected value"
+            exit 1
+          fi
+          mise --version || { echo "FAIL: mise not on PATH"; exit 1; }
+          echo "PASS"

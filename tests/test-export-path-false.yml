@@ -1,0 +1,37 @@
+name: Test export_path false
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          install: false
+          export_path: false
+          version: 2025.7.3
+          sha256: d38d4993c5379a680b50661f86287731dc1d1264777880a79b786403af337948
+          mise_toml: |
+            [env]
+            MY_ENV_VAR = "abc"
+            _.path = ["{{config_root}}/mise-env-path"]
+      - name: Assert env exported but PATH not
+        run: |
+          echo "MY_ENV_VAR=$MY_ENV_VAR"
+          echo "PATH=$PATH"
+          if [ "$MY_ENV_VAR" != "abc" ]; then
+            echo "FAIL: expected MY_ENV_VAR=abc"
+            exit 1
+          fi
+          case "$PATH" in
+            *mise-env-path*)
+              echo "FAIL: mise env path unexpectedly exported to PATH"
+              exit 1
+              ;;
+          esac
+          echo "PASS"
