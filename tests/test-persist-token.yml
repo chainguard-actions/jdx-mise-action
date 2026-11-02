@@ -1,0 +1,41 @@
+name: Test persist_github_token with explicit value
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Create working directory
+        run: mkdir -p mise-test-token
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          install: false
+          env: false
+          working_directory: mise-test-token
+          mise_dir: ${{ runner.temp }}/mise-token
+          version: 2025.7.3
+          sha256: d38d4993c5379a680b50661f86287731dc1d1264777880a79b786403af337948
+          persist_github_token: mise-action-persist-test-token
+      - name: Assert token persisted
+        run: |
+          if [ "$MISE_GITHUB_TOKEN" != "mise-action-persist-test-token" ]; then
+            echo "FAIL: MISE_GITHUB_TOKEN not persisted with the explicit value"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert MISE_DATA_DIR exported from mise_dir
+        env:
+          EXPECTED: ${{ runner.temp }}/mise-token
+        run: |
+          echo "MISE_DATA_DIR=$MISE_DATA_DIR"
+          if [ "$MISE_DATA_DIR" != "$EXPECTED" ]; then
+            echo "FAIL: expected MISE_DATA_DIR=$EXPECTED"
+            exit 1
+          fi
+          mise --version
+          echo "PASS"

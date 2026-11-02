@@ -1,0 +1,57 @@
+name: Test pinned version with env and PATH export
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Create PATH fixture (root and subdir, wherever config_root resolves)
+        run: |
+          for d in "$GITHUB_WORKSPACE/mise-env-path" "$GITHUB_WORKSPACE/mise-test-env/mise-env-path"; do
+            mkdir -p "$d"
+            printf '#!/usr/bin/env bash\necho fixture-ok\n' > "$d/mise-path-fixture"
+            chmod +x "$d/mise-path-fixture"
+          done
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          install: false
+          version: 2025.7.3
+          sha256: d38d4993c5379a680b50661f86287731dc1d1264777880a79b786403af337948
+          mise_toml: |
+            [env]
+            MY_ENV_VAR = "abc"
+            _.path = ["{{config_root}}/mise-env-path"]
+      - name: Assert pinned mise version
+        run: |
+          out="$(mise --version)"
+          echo "mise --version: $out"
+          case "$out" in
+            *2025.7.3*) echo "PASS" ;;
+            *) echo "FAIL: expected 2025.7.3"; exit 1 ;;
+          esac
+      - name: Assert env var exported
+        run: |
+          echo "MY_ENV_VAR=$MY_ENV_VAR"
+          if [ "$MY_ENV_VAR" != "abc" ]; then
+            echo "FAIL: expected MY_ENV_VAR=abc"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert _.path exported to PATH
+        run: |
+          echo "PATH=$PATH"
+          case ":$PATH:" in
+            *"/mise-env-path:"*) echo "mise-env-path entry found on PATH" ;;
+            *) echo "FAIL: mise-env-path not on PATH"; exit 1 ;;
+          esac
+          out="$(mise-path-fixture)" || { echo "FAIL: fixture not runnable from PATH"; exit 1; }
+          if [ "$out" != "fixture-ok" ]; then
+            echo "FAIL: unexpected output '$out'"
+            exit 1
+          fi
+          echo "PASS"

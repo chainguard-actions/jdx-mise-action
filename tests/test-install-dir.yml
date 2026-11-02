@@ -1,0 +1,42 @@
+name: Test deprecated install_dir as working directory
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Create sub-project config
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/subproj"
+          printf '[tools]\njq = "1.7.1"\n' > "$GITHUB_WORKSPACE/subproj/mise.toml"
+          cat "$GITHUB_WORKSPACE/subproj/mise.toml"
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          install_dir: subproj
+      - name: Assert jq installed from sub-project config
+        working-directory: subproj
+        run: |
+          out="$(mise x jq -- jq --version)"
+          echo "jq version: $out"
+          if [ "$out" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq output from sub-project
+        env:
+          JQ: ${{ steps.mise.outputs.jq }}
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "jq: $JQ"
+          echo "versions: $VERSIONS"
+          if [ "$JQ" != "1.7.1" ]; then
+            echo "FAIL: expected jq output 1.7.1 (install_dir should be used as cwd)"
+            exit 1
+          fi
+          echo "PASS"

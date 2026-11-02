@@ -1,0 +1,32 @@
+name: Test custom cache_key template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - id: mise
+        uses: .
+        with:
+          cache: true
+          cache_save: false
+          install: false
+          cache_key: "{{cache_key_prefix}}-custom-{{platform}}-{{env.RUNNER_OS}}"
+      - name: Assert mise is available
+        run: |
+          which mise || { echo "FAIL: mise not on PATH"; exit 1; }
+          mise --version
+          echo "PASS"
+      - name: Assert cache-hit output set
+        env:
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          if [ "$CACHE_HIT" != "true" ] && [ "$CACHE_HIT" != "false" ]; then
+            echo "FAIL: cache-hit should be 'true' or 'false' when cache is enabled"
+            exit 1
+          fi
+          echo "PASS"

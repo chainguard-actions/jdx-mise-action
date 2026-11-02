@@ -1,0 +1,71 @@
+name: Test install tool via mise_toml
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          install_args: jq
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - name: Assert mise is on PATH
+        run: |
+          which mise || { echo "FAIL: mise not on PATH"; exit 1; }
+          mise --version
+          echo "PASS"
+      - name: Assert jq installed via mise
+        run: |
+          out="$(mise x jq -- jq --version)"
+          echo "jq version: $out"
+          if [ "$out" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq install dir exported to PATH
+        run: |
+          echo "PATH=$PATH"
+          case ":$PATH:" in
+            *"/installs/jq/1.7.1"*) echo "PASS" ;;
+            *) echo "FAIL: jq install path not on PATH"; exit 1 ;;
+          esac
+      - name: Assert mise.toml written
+        run: |
+          f="$GITHUB_WORKSPACE/mise.toml"
+          cat "$f" || { echo "FAIL: mise.toml not found"; exit 1; }
+          grep -q 'jq = "1.7.1"' "$f" || { echo "FAIL: mise.toml content missing"; exit 1; }
+          echo "PASS"
+      - name: Assert outputs
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+          CACHE_HIT: ${{ steps.mise.outputs.cache-hit }}
+          JQ: ${{ steps.mise.outputs.jq }}
+        run: |
+          echo "versions: $VERSIONS"
+          echo "cache-hit: $CACHE_HIT"
+          echo "jq: $JQ"
+          if ! echo "$VERSIONS" | grep -q '"jq"'; then
+            echo "FAIL: versions output missing jq"
+            exit 1
+          fi
+          if ! echo "$VERSIONS" | grep -q '1.7.1'; then
+            echo "FAIL: versions output missing 1.7.1"
+            exit 1
+          fi
+          if [ "$JQ" != "1.7.1" ]; then
+            echo "FAIL: expected jq output 1.7.1"
+            exit 1
+          fi
+          if [ "$CACHE_HIT" = "true" ]; then
+            echo "FAIL: cache disabled, cache-hit should not be true"
+            exit 1
+          fi
+          echo "PASS"
