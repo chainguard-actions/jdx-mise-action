@@ -1,0 +1,62 @@
+name: Test mise_dir with custom cache_key
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: 2025.1.0
+          cache: "true"
+          cache_save: "false"
+          cache_key: "act-test-{{version}}-{{platform}}-{{cache_key_prefix}}"
+          mise_dir: ${{ runner.temp }}/custom-mise-data
+          install_dir: "."
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - name: Assert MISE_DATA_DIR exported to mise_dir
+        env:
+          EXPECTED: ${{ runner.temp }}/custom-mise-data
+        run: |
+          echo "MISE_DATA_DIR: $MISE_DATA_DIR"
+          if [ "$MISE_DATA_DIR" != "$EXPECTED" ]; then
+            echo "FAIL: expected MISE_DATA_DIR=$EXPECTED"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert mise binary and tools installed under mise_dir
+        env:
+          DIR: ${{ runner.temp }}/custom-mise-data
+        run: |
+          ls -la "$DIR" || true
+          if [ ! -x "$DIR/bin/mise" ]; then
+            echo "FAIL: mise binary not found at $DIR/bin/mise"
+            exit 1
+          fi
+          if [ ! -d "$DIR/installs/jq" ]; then
+            echo "FAIL: jq not installed under $DIR/installs"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert cache-hit output is a boolean
+        env:
+          ACTUAL: ${{ steps.mise.outputs.cache-hit }}
+          JQ: ${{ steps.mise.outputs.jq }}
+        run: |
+          echo "cache-hit: $ACTUAL jq: $JQ"
+          if [ "$ACTUAL" != "true" ] && [ "$ACTUAL" != "false" ]; then
+            echo "FAIL: cache-hit should be true/false"
+            exit 1
+          fi
+          if [ "$JQ" != "1.7.1" ]; then
+            echo "FAIL: expected jq 1.7.1"
+            exit 1
+          fi
+          echo "PASS"

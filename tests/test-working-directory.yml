@@ -1,0 +1,33 @@
+name: Test working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create subproject config
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/wd-subproject"
+          printf '[tools]\njq = "1.7.1"\n' > "$GITHUB_WORKSPACE/wd-subproject/mise.toml"
+      - id: mise
+        uses: .
+        with:
+          version: 2025.1.0
+          cache: "false"
+          working_directory: wd-subproject
+      - name: Assert tool from subproject config was installed
+        env:
+          ACTUAL: ${{ steps.mise.outputs.jq }}
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "jq: $ACTUAL"
+          echo "versions: $VERSIONS"
+          if [ "$ACTUAL" != "1.7.1" ]; then
+            echo "FAIL: expected jq '1.7.1' resolved from working_directory config"
+            exit 1
+          fi
+          echo "PASS"

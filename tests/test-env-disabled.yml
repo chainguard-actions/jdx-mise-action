@@ -1,0 +1,28 @@
+name: Test env export disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: 2025.1.0
+          cache: "false"
+          env: "false"
+          mise_toml: |
+            [env]
+            SHOULD_NOT_EXPORT = "oops"
+      - name: Assert env var NOT exported
+        run: |
+          echo "SHOULD_NOT_EXPORT='${SHOULD_NOT_EXPORT:-}'"
+          if [ -n "${SHOULD_NOT_EXPORT:-}" ]; then
+            echo "FAIL: env var should not be exported when env=false"
+            exit 1
+          fi
+          echo "PASS"

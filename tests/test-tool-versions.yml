@@ -1,0 +1,43 @@
+name: Test tool_versions input with install_args
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: 2025.1.0
+          cache: "false"
+          tool_versions: |
+            jq 1.7.1
+          install_args: jq
+      - name: Assert .tool-versions written
+        run: |
+          cat .tool-versions || { echo "FAIL: .tool-versions missing"; exit 1; }
+          if ! grep -q 'jq 1.7.1' .tool-versions; then
+            echo "FAIL: .tool-versions does not contain 'jq 1.7.1'"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq output
+        env:
+          ACTUAL: ${{ steps.mise.outputs.jq }}
+        run: |
+          echo "jq: $ACTUAL"
+          if [ "$ACTUAL" != "1.7.1" ]; then
+            echo "FAIL: expected jq output '1.7.1'"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq usable
+        run: |
+          OUT="$(jq --version)"
+          echo "jq --version: $OUT"
+          echo "$OUT" | grep -q '1.7.1' || { echo "FAIL: expected jq 1.7.1"; exit 1; }
+          echo "PASS"

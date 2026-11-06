@@ -1,0 +1,39 @@
+name: Test basic pinned version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: mise
+        uses: .
+        with:
+          version: 2025.1.0
+          cache: "false"
+          mise_toml: |
+            [env]
+            BASIC_TEST = "1"
+      - name: Assert mise is on PATH with pinned version
+        run: |
+          command -v mise || { echo "FAIL: mise not on PATH"; exit 1; }
+          VER="$(mise --version)"
+          echo "mise --version: $VER"
+          if ! echo "$VER" | grep -q '2025.1.0'; then
+            echo "FAIL: expected mise 2025.1.0"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert cache-hit is false when cache disabled
+        env:
+          ACTUAL: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "false" ]; then
+            echo "FAIL: expected 'false'"
+            exit 1
+          fi
+          echo "PASS"
