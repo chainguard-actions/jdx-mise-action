@@ -1,0 +1,33 @@
+name: Test basic mise install
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+      - name: Assert mise is available
+        env:
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          if ! command -v mise >/dev/null 2>&1; then
+            echo "FAIL: mise not found on PATH"
+            exit 1
+          fi
+          V="$(mise --version)"
+          echo "mise version: $V"
+          if [ -z "$V" ]; then
+            echo "FAIL: empty mise version"
+            exit 1
+          fi
+          if [ "$CACHE_HIT" = "true" ]; then
+            echo "FAIL: cache disabled but cache-hit is true"
+            exit 1
+          fi
+          echo "PASS"

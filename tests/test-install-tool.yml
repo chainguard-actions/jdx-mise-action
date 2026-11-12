@@ -1,0 +1,36 @@
+name: Test installing a tool
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare working dir
+        run: mkdir -p "$GITHUB_WORKSPACE/mise-tool-test"
+      - id: action
+        uses: .
+        with:
+          working_directory: mise-tool-test
+          cache: "false"
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - name: Assert jq installed and versions output set
+        env:
+          VERSIONS: ${{ steps.action.outputs.versions }}
+          JQ_OUT: ${{ steps.action.outputs.jq }}
+        working-directory: mise-tool-test
+        run: |
+          echo "versions: $VERSIONS"
+          echo "jq output: $JQ_OUT"
+          case "$VERSIONS" in
+            *jq*1.7.1*) ;;
+            *) echo "FAIL: versions output missing jq 1.7.1"; exit 1 ;;
+          esac
+          OUT="$(mise exec -- jq --version)"
+          echo "jq --version: $OUT"
+          case "$OUT" in
+            *1.7.1*) echo "PASS" ;;
+            *) echo "FAIL: expected jq 1.7.1"; exit 1 ;;
+          esac

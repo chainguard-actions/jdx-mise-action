@@ -1,0 +1,42 @@
+name: Test mise_toml env export
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache: "false"
+          mise_toml: |
+            [env]
+            MISE_ACTION_TEST_VAR = "hello-from-mise"
+      - name: Assert env var from mise_toml exported to later steps
+        env:
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "cache-hit: $CACHE_HIT"
+          echo "MISE_ACTION_TEST_VAR=$MISE_ACTION_TEST_VAR"
+          # Informational only: where the action wrote mise.toml depends on the
+          # workspace path the action process sees, which can differ under act.
+          for f in "$GITHUB_WORKSPACE/mise.toml" "$PWD/mise.toml"; do
+            [ -f "$f" ] && { echo "found $f:"; cat "$f"; }
+          done
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: action step did not succeed"
+            exit 1
+          fi
+          if [ "$MISE_ACTION_TEST_VAR" != "hello-from-mise" ]; then
+            echo "FAIL: env var from mise_toml not exported"
+            exit 1
+          fi
+          if [ "$CACHE_HIT" = "true" ]; then
+            echo "FAIL: cache disabled but cache-hit=true"
+            exit 1
+          fi
+          echo "PASS"

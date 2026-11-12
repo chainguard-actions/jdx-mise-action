@@ -1,0 +1,47 @@
+name: Test tool_versions with install_args and install_dir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare install dir
+        run: mkdir -p "$GITHUB_WORKSPACE/mise-install-dir"
+      - id: action
+        uses: .
+        with:
+          install_dir: mise-install-dir
+          cache: "false"
+          install_args: jq
+          tool_versions: |
+            jq 1.7.1
+      - name: Assert .tool-versions written
+        run: |
+          F="$GITHUB_WORKSPACE/.tool-versions"
+          if [ ! -f "$F" ]; then
+            echo "FAIL: .tool-versions not found at $F"
+            exit 1
+          fi
+          cat "$F"
+          if ! grep -q "jq 1.7.1" "$F"; then
+            echo "FAIL: .tool-versions missing 'jq 1.7.1'"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq installed
+        env:
+          VERSIONS: ${{ steps.action.outputs.versions }}
+        working-directory: mise-install-dir
+        run: |
+          echo "versions: $VERSIONS"
+          case "$VERSIONS" in
+            *jq*1.7.1*) ;;
+            *) echo "FAIL: versions output missing jq 1.7.1"; exit 1 ;;
+          esac
+          OUT="$(mise exec -- jq --version)"
+          echo "jq --version: $OUT"
+          case "$OUT" in
+            *1.7.1*) echo "PASS" ;;
+            *) echo "FAIL: expected jq 1.7.1"; exit 1 ;;
+          esac

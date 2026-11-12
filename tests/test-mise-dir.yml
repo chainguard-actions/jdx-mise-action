@@ -1,0 +1,42 @@
+name: Test custom mise_dir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare working dir
+        run: mkdir -p "$GITHUB_WORKSPACE/mise-dir-test"
+      - id: action
+        uses: .
+        with:
+          mise_dir: ${{ runner.temp }}/custom-mise-data
+          working_directory: mise-dir-test
+          cache: "false"
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - name: Assert MISE_DATA_DIR exported and tools installed there
+        env:
+          EXPECTED: ${{ runner.temp }}/custom-mise-data
+        working-directory: mise-dir-test
+        run: |
+          echo "MISE_DATA_DIR: $MISE_DATA_DIR"
+          echo "expected: $EXPECTED"
+          if [ "$MISE_DATA_DIR" != "$EXPECTED" ]; then
+            echo "FAIL: MISE_DATA_DIR not set to mise_dir"
+            exit 1
+          fi
+          ls -la "$EXPECTED" || true
+          if [ ! -d "$EXPECTED/installs/jq" ]; then
+            echo "FAIL: jq not installed under $EXPECTED/installs"
+            ls -R "$EXPECTED" | head -50 || true
+            exit 1
+          fi
+          OUT="$(mise exec -- jq --version)"
+          echo "jq --version: $OUT"
+          case "$OUT" in
+            *1.7.1*) echo "PASS" ;;
+            *) echo "FAIL: expected jq 1.7.1"; exit 1 ;;
+          esac
