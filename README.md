@@ -32,6 +32,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v5.2.6 | [`v5.2.6`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.6) | [`f5be966`](https://github.com/jdx/mise-action/commit/f5be966e4a917d54244728e6a5fdcd1d93a35e6c) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.2.6/HARDENING.md) |
 | v5.2.7 | [`v5.2.7`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.7) | [`b44d12e`](https://github.com/jdx/mise-action/commit/b44d12e7d0d8ee7461bb893e1b1993500433185b) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.2.7/HARDENING.md) |
 | v5.2.8 | [`v5.2.8`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.8) | [`d5574b5`](https://github.com/jdx/mise-action/commit/d5574b52816a478f9d4e6529a3f6ff17a8a36785) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.2.8/HARDENING.md) |
+| v5.2.9 | [`v5.2.9`](https://github.com/chainguard-actions/jdx-mise-action/tree/v5.2.9) | [`236a21c`](https://github.com/jdx/mise-action/commit/236a21c3b91f5db6d4e174b348674a0f0caac06d) | [`HARDENING.md`](https://github.com/chainguard-actions/jdx-mise-action/blob/v5.2.9/HARDENING.md) |
 
 ## Privacy
 
