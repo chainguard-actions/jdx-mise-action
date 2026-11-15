@@ -1,0 +1,47 @@
+name: Test installing a tool via tool_versions
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          cache: "false"
+          tool_versions: |
+            jq 1.7.1
+      - name: Assert .tool-versions written
+        run: |
+          F="$GITHUB_WORKSPACE/.tool-versions"
+          [ -f "$F" ] || { echo "FAIL: $F missing"; exit 1; }
+          cat "$F"
+          grep -q 'jq 1.7.1' "$F" || { echo "FAIL: content mismatch"; exit 1; }
+          echo "PASS"
+      - name: Assert jq installed
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          OUT="$(mise exec -- jq --version)"
+          echo "jq --version: $OUT"
+          if [ "$OUT" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq output and versions output
+        env:
+          JQ_OUT: ${{ steps.action.outputs.jq }}
+          VERSIONS: ${{ steps.action.outputs.versions }}
+        run: |
+          echo "jq output: $JQ_OUT"
+          echo "versions: $VERSIONS"
+          if [ "$JQ_OUT" != "1.7.1" ]; then
+            echo "FAIL: expected jq output 1.7.1"
+            exit 1
+          fi
+          if ! echo "$VERSIONS" | grep -q '"jq"'; then
+            echo "FAIL: versions output does not include jq"
+            exit 1
+          fi
+          echo "PASS"

@@ -1,0 +1,28 @@
+name: Test custom cache_key template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          install: "false"
+          cache_save: "false"
+          cache_key: "mise-act-test-{{platform}}-{{cache_key_prefix}}-{{install_args_hash}}"
+      - name: Assert cache-hit output is a boolean
+        env:
+          HIT: ${{ steps.action.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $HIT"
+          if [ "$HIT" != "true" ] && [ "$HIT" != "false" ]; then
+            echo "FAIL: expected cache-hit to be true or false"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert mise available
+        run: |
+          mise --version || { echo "FAIL: mise not available"; exit 1; }
+          echo "PASS"

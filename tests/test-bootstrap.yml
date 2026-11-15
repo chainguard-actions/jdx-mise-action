@@ -1,0 +1,33 @@
+name: Test bootstrap with skip and args
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          cache: "false"
+          bootstrap: "true"
+          bootstrap_skip: "task"
+          bootstrap_args: "--yes"
+          tool_versions: |
+            jq 1.7.1
+      - name: Assert mise available and experimental enabled
+        run: |
+          mise --version || { echo "FAIL: mise not available"; exit 1; }
+          echo "MISE_EXPERIMENTAL: $MISE_EXPERIMENTAL"
+          if [ "$MISE_EXPERIMENTAL" != "1" ]; then
+            echo "FAIL: bootstrap should export MISE_EXPERIMENTAL=1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq usable
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          OUT="$(mise exec -- jq --version)"
+          echo "jq --version: $OUT"
+          [ "$OUT" = "jq-1.7.1" ] || { echo "FAIL: expected jq-1.7.1"; exit 1; }
+          echo "PASS"

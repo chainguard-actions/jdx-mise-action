@@ -1,0 +1,33 @@
+name: Test mise_toml env export
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          cache: "false"
+          mise_toml: |
+            [env]
+            MISE_ACTION_TEST_VAR = "hello-from-mise"
+      - name: Assert mise.toml written
+        run: |
+          F="$GITHUB_WORKSPACE/mise.toml"
+          if [ ! -f "$F" ]; then
+            echo "FAIL: $F not written"
+            exit 1
+          fi
+          cat "$F"
+          grep -q 'MISE_ACTION_TEST_VAR' "$F" || { echo "FAIL: content missing"; exit 1; }
+          echo "PASS"
+      - name: Assert env var exported to later steps
+        run: |
+          echo "MISE_ACTION_TEST_VAR=$MISE_ACTION_TEST_VAR"
+          if [ "$MISE_ACTION_TEST_VAR" != "hello-from-mise" ]; then
+            echo "FAIL: expected env var exported"
+            exit 1
+          fi
+          echo "PASS"

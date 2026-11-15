@@ -1,0 +1,40 @@
+name: Test working_directory with install_args
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create sub-project config
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/subproj"
+          printf 'jq 1.7.1\n' > "$GITHUB_WORKSPACE/subproj/.tool-versions"
+      - id: action
+        uses: .
+        with:
+          cache: "false"
+          working_directory: subproj
+          install_args: jq
+      - name: Assert jq installed in working directory
+        run: |
+          cd "$GITHUB_WORKSPACE/subproj"
+          OUT="$(mise exec -- jq --version)"
+          echo "jq --version: $OUT"
+          if [ "$OUT" != "jq-1.7.1" ]; then
+            echo "FAIL: expected jq-1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq output resolved from working directory
+        env:
+          JQ_OUT: ${{ steps.action.outputs.jq }}
+          VERSIONS: ${{ steps.action.outputs.versions }}
+        run: |
+          echo "jq output: $JQ_OUT"
+          echo "versions: $VERSIONS"
+          if [ "$JQ_OUT" != "1.7.1" ]; then
+            echo "FAIL: expected jq output 1.7.1"
+            exit 1
+          fi
+          echo "PASS"

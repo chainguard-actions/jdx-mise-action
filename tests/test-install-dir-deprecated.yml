@@ -1,0 +1,34 @@
+name: Test deprecated install_dir acts as working directory
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create sub-project config
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/legacy-dir"
+          printf 'jq 1.7.1\n' > "$GITHUB_WORKSPACE/legacy-dir/.tool-versions"
+      - id: action
+        uses: .
+        with:
+          cache: "false"
+          install_dir: legacy-dir
+      - name: Assert jq output resolved from install_dir
+        env:
+          JQ_OUT: ${{ steps.action.outputs.jq }}
+        run: |
+          echo "jq output: $JQ_OUT"
+          if [ "$JQ_OUT" != "1.7.1" ]; then
+            echo "FAIL: expected jq output 1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq usable in install_dir
+        run: |
+          cd "$GITHUB_WORKSPACE/legacy-dir"
+          OUT="$(mise exec -- jq --version)"
+          echo "jq --version: $OUT"
+          [ "$OUT" = "jq-1.7.1" ] || { echo "FAIL: expected jq-1.7.1"; exit 1; }
+          echo "PASS"
