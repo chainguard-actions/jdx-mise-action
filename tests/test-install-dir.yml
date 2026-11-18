@@ -1,0 +1,45 @@
+name: Test deprecated install_dir used as working directory
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove repo mise config and create a sub-project config
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/mise.lock" "$GITHUB_WORKSPACE/.mise.toml" "$GITHUB_WORKSPACE/mise.toml" "$GITHUB_WORKSPACE/.mise"
+          mkdir -p "$GITHUB_WORKSPACE/subproject"
+          printf '[tools]\njq = "1.7.1"\n' > "$GITHUB_WORKSPACE/subproject/mise.toml"
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          version: 2025.7.3
+          sha256: d38d4993c5379a680b50661f86287731dc1d1264777880a79b786403af337948
+          mise_dir: ${{ runner.temp }}/mise-installdir-data
+          install_dir: subproject
+      - name: Assert jq from subproject config was installed
+        run: |
+          ls -la "$MISE_DATA_DIR/installs" || true
+          if [ ! -d "$MISE_DATA_DIR/installs/jq/1.7.1" ]; then
+            echo "FAIL: jq 1.7.1 from subproject/mise.toml was not installed"
+            exit 1
+          fi
+          OUT="$(cd subproject && mise x -- jq --version)"
+          echo "jq --version: $OUT"
+          if ! echo "$OUT" | grep -q "1.7.1"; then
+            echo "FAIL: expected jq 1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert versions output contains jq
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          if ! echo "$VERSIONS" | grep -q '"jq"'; then
+            echo "FAIL: versions output does not contain jq"
+            exit 1
+          fi
+          echo "PASS"

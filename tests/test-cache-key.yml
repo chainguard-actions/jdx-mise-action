@@ -1,0 +1,41 @@
+name: Test custom cache_key template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove repo mise config so only the mise_toml input applies
+        run: rm -rf "$GITHUB_WORKSPACE/mise.lock" "$GITHUB_WORKSPACE/.mise.toml" "$GITHUB_WORKSPACE/.mise"
+      - id: mise
+        uses: .
+        with:
+          cache: true
+          cache_save: false
+          version: 2025.7.3
+          sha256: d38d4993c5379a680b50661f86287731dc1d1264777880a79b786403af337948
+          mise_dir: ${{ runner.temp }}/mise-cachekey-data
+          cache_key: "custom-test-{{cache_key_prefix}}-{{platform}}-{{#if version}}v{{version}}{{/if}}-${{ github.run_id }}-${{ github.run_attempt }}"
+          mise_toml: |
+            [tools]
+            jq = "1.7.1"
+      - name: Assert cache-hit is false for a unique custom key
+        env:
+          ACTUAL: ${{ steps.mise.outputs.cache-hit }}
+        run: |
+          echo "cache-hit: $ACTUAL"
+          if [ "$ACTUAL" = "true" ]; then
+            echo "FAIL: unique custom cache key should not hit"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq installed
+        run: |
+          OUT="$(mise x -- jq --version)"
+          echo "jq --version: $OUT"
+          if ! echo "$OUT" | grep -q "1.7.1"; then
+            echo "FAIL: expected jq 1.7.1"
+            exit 1
+          fi
+          echo "PASS"

@@ -1,0 +1,46 @@
+name: Test tool_versions input writes .tool-versions and installs tool
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove repo mise config so only the tool_versions input applies
+        run: rm -rf "$GITHUB_WORKSPACE/mise.lock" "$GITHUB_WORKSPACE/.mise.toml" "$GITHUB_WORKSPACE/mise.toml" "$GITHUB_WORKSPACE/.mise"
+      - id: mise
+        uses: .
+        with:
+          cache: false
+          version: 2025.7.3
+          sha256: d38d4993c5379a680b50661f86287731dc1d1264777880a79b786403af337948
+          mise_dir: ${{ runner.temp }}/mise-toolversions-data
+          tool_versions: |
+            jq 1.7.1
+      - name: Assert .tool-versions file was written
+        run: |
+          cat "$GITHUB_WORKSPACE/.tool-versions" || true
+          if ! grep -q "jq 1.7.1" "$GITHUB_WORKSPACE/.tool-versions"; then
+            echo "FAIL: .tool-versions does not contain 'jq 1.7.1'"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert jq 1.7.1 installed
+        run: |
+          OUT="$(mise x -- jq --version)"
+          echo "jq --version: $OUT"
+          if ! echo "$OUT" | grep -q "1.7.1"; then
+            echo "FAIL: expected jq 1.7.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert versions output contains jq
+        env:
+          VERSIONS: ${{ steps.mise.outputs.versions }}
+        run: |
+          echo "versions: $VERSIONS"
+          if ! echo "$VERSIONS" | grep -q '"jq"'; then
+            echo "FAIL: versions output does not contain jq"
+            exit 1
+          fi
+          echo "PASS"
